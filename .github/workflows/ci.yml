@@ -179,6 +179,29 @@ jobs:
       - name: Build
         run: cmake --build --preset ${{ matrix.preset }} --parallel
 
+      - name: Deploy Qt runtime (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $binDir = "build/${{ matrix.preset }}/bin"
+          $exe = Join-Path $binDir "phantomx-qt.exe"
+          if (Test-Path $exe) {
+            windeployqt --release --qmldir apps/phantomx-qt/qml --dir $binDir $exe
+          }
+
+      - name: Deploy Qt runtime (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          BIN_DIR="build/${{ matrix.preset }}/bin"
+          APP="$BIN_DIR/phantomx-qt.app"
+          if [ -d "$APP" ]; then
+            macdeployqt "$APP" -qmldir=apps/phantomx-qt/qml -verbose=1
+          elif [ -f "$BIN_DIR/phantomx-qt" ]; then
+            macdeployqt "$BIN_DIR/phantomx-qt" -qmldir=apps/phantomx-qt/qml -verbose=1 || true
+          fi
+
       - name: Package Qt artifacts
         shell: bash
         run: |

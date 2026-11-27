@@ -153,7 +153,14 @@ void P2PNode::stop() {
     try {
       t.join();
     } catch (const std::system_error&) {
-      // Best-effort join on shutdown; avoid crashing tests on platform-specific thread state races.
+      // Best-effort join on shutdown; avoid terminate if join fails.
+      if (t.joinable()) {
+        try { t.detach(); } catch (...) {}
+      }
+    } catch (...) {
+      if (t.joinable()) {
+        try { t.detach(); } catch (...) {}
+      }
     }
   };
   safe_join(accept_thread_);
