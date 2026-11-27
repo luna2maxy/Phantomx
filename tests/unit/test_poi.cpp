@@ -244,7 +244,7 @@ PHX_TEST(poi_identity_claim_requires_signature_for_remote_rpc) {
   PHX_EXPECT(phantomx::crypto::init().ok());
   namespace fs = std::filesystem;
   auto tmp = fs::temp_directory_path() / "phx_poi_identity_test";
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
   fs::create_directories(tmp);
   auto chain = phantomx::blockchain::ChainDatabase::open(tmp / "chain.db");
   PHX_EXPECT(chain.ok());
@@ -296,14 +296,14 @@ PHX_TEST(poi_identity_claim_requires_signature_for_remote_rpc) {
   PHX_EXPECT(!r3.ok);
   PHX_EXPECT(r3.code == phantomx::rpc::RpcErrorCode::kForbidden);
   phantomx::rpc::g_rpc_remote_ip.clear();
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(poi_identity_claim_bad_sig_and_skew_and_conflicts) {
   PHX_EXPECT(phantomx::crypto::init().ok());
   namespace fs = std::filesystem;
   auto tmp = fs::temp_directory_path() / "phx_poi_identity_test2";
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
   fs::create_directories(tmp);
   auto chain = phantomx::blockchain::ChainDatabase::open(tmp / "chain.db");
   PHX_EXPECT(chain.ok());
@@ -361,7 +361,7 @@ PHX_TEST(poi_identity_claim_bad_sig_and_skew_and_conflicts) {
 
   // same owner different pubkey -> forbidden
   auto kp2 = phantomx::crypto::generate_keypair(phantomx::crypto::KeyRole::kNodeIdentity);
-  PHX_EXPECT(kp2.ok()); if (!kp2.ok()) { phantomx::rpc::g_rpc_remote_ip.clear(); fs::remove_all(tmp); return; }
+  PHX_EXPECT(kp2.ok()); if (!kp2.ok()) { phantomx::rpc::g_rpc_remote_ip.clear(); { std::error_code _ec; fs::remove_all(tmp, _ec); } return; }
   auto rdiff = make_req("p1b","ownerA2","m2");
   sign_req(rdiff, kp2.value(), ts);
   auto diffr = server.call(rdiff, 14);
@@ -376,14 +376,14 @@ PHX_TEST(poi_identity_claim_bad_sig_and_skew_and_conflicts) {
   PHX_EXPECT(samepkr.code == phantomx::rpc::RpcErrorCode::kForbidden);
 
   phantomx::rpc::g_rpc_remote_ip.clear();
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(poi_identity_binding_persists_in_state_json) {
   PHX_EXPECT(phantomx::crypto::init().ok());
   namespace fs = std::filesystem;
   auto tmp = fs::temp_directory_path() / "phx_poi_identity_persist";
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
   fs::create_directories(tmp);
   // First server: bind identity
   {
@@ -424,7 +424,7 @@ PHX_TEST(poi_identity_binding_persists_in_state_json) {
       PHX_EXPECT(m.value()->find("identity_bindings") != std::string::npos);
     }
   }
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(poi_uptime_challenge_sign_verify_and_freshness) {
@@ -493,7 +493,7 @@ PHX_TEST(poi_uptime_response_attestation_quorum_replay_conflict) {
 PHX_TEST(poi_state_malformed_json_does_not_crash_or_corrupt) {
   namespace fs = std::filesystem;
   auto tmp = fs::temp_directory_path() / "phx_poi_malformed";
-  fs::remove_all(tmp); fs::create_directories(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); } fs::create_directories(tmp);
   {
     auto chain = phantomx::blockchain::ChainDatabase::open(tmp / "chain.db");
     PHX_EXPECT(chain.ok()); if (!chain.ok()) return;
@@ -513,13 +513,13 @@ PHX_TEST(poi_state_malformed_json_does_not_crash_or_corrupt) {
     auto r = server.call(req, 1);
     PHX_EXPECT(r.ok);
   }
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(poi_state_corrupt_identity_binding_ignored) {
   namespace fs = std::filesystem;
   auto tmp = fs::temp_directory_path() / "phx_poi_corrupt_id";
-  fs::remove_all(tmp); fs::create_directories(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); } fs::create_directories(tmp);
   {
     auto chain = phantomx::blockchain::ChainDatabase::open(tmp / "chain.db");
     PHX_EXPECT(chain.ok()); if (!chain.ok()) return;
@@ -551,13 +551,13 @@ PHX_TEST(poi_state_corrupt_identity_binding_ignored) {
     PHX_EXPECT(r.ok);
     phantomx::rpc::g_rpc_remote_ip.clear();
   }
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(ptm001_heartbeat_liveness_only_no_finality_effect) {
   namespace fs = std::filesystem;
   auto tmp = fs::temp_directory_path() / "phx_ptm001";
-  fs::remove_all(tmp); fs::create_directories(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); } fs::create_directories(tmp);
   auto chain = phantomx::blockchain::ChainDatabase::open(tmp / "chain.db");
   PHX_EXPECT(chain.ok()); if (!chain.ok()) return;
   phantomx::Mempool mempool; phantomx::pool::PoolLedger pool; phantomx::aggregator::AggregationEngine agg;
@@ -609,13 +609,13 @@ PHX_TEST(ptm001_heartbeat_liveness_only_no_finality_effect) {
   auto fir = server.call(fi, 3);
   PHX_EXPECT(fir.ok);
   PHX_EXPECT(fir.result.count("finalized_height"));
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(ptm002_setpoiquorum_requires_admin_token) {
   namespace fs = std::filesystem;
   auto tmp = fs::temp_directory_path() / "phx_ptm002";
-  fs::remove_all(tmp); fs::create_directories(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); } fs::create_directories(tmp);
   auto chain = phantomx::blockchain::ChainDatabase::open(tmp / "chain.db");
   PHX_EXPECT(chain.ok()); if (!chain.ok()) return;
   phantomx::Mempool mempool; phantomx::pool::PoolLedger pool; phantomx::aggregator::AggregationEngine agg;
@@ -640,13 +640,13 @@ PHX_TEST(ptm002_setpoiquorum_requires_admin_token) {
   auto r4 = server.call(req, 4);
   PHX_EXPECT(r4.ok);
   unsetenv("PHANTOMX_ADMIN_TOKEN");
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(ptm005_stoppoi_participant_scope_requires_owner) {
   namespace fs = std::filesystem;
   auto tmp = fs::temp_directory_path() / "phx_ptm005";
-  fs::remove_all(tmp); fs::create_directories(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); } fs::create_directories(tmp);
   PHX_EXPECT(phantomx::crypto::init().ok());
   auto chain = phantomx::blockchain::ChainDatabase::open(tmp / "chain.db");
   PHX_EXPECT(chain.ok()); if (!chain.ok()) return;
@@ -679,7 +679,7 @@ PHX_TEST(ptm005_stoppoi_participant_scope_requires_owner) {
   const auto ts2 = static_cast<std::uint64_t>(std::time(nullptr));
   const std::string msg2 = "PHX/poi/identity/v1|ownerS|mS|pS|" + std::to_string(ts2);
   auto sig2 = phantomx::crypto::sign(std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(msg2.data()), msg2.size()), kp.value().sec);
-  PHX_EXPECT(sig2.ok()); if(!sig2.ok()) { phantomx::rpc::g_rpc_remote_ip.clear(); fs::remove_all(tmp); return; }
+  PHX_EXPECT(sig2.ok()); if(!sig2.ok()) { phantomx::rpc::g_rpc_remote_ip.clear(); { std::error_code _ec; fs::remove_all(tmp, _ec); } return; }
   stop.params["owner_address"]="ownerS"; stop.params["machine_id"]="mS";
   stop.params["identity_pubkey"]=phantomx::crypto::serialize_public_key_hex(kp.value().pub);
   stop.params["identity_sig"]=phantomx::crypto::serialize_signature_hex(sig2.value());
@@ -698,13 +698,13 @@ PHX_TEST(ptm005_stoppoi_participant_scope_requires_owner) {
   PHX_EXPECT(sa2.ok);
   unsetenv("PHANTOMX_ADMIN_TOKEN");
   phantomx::rpc::g_rpc_remote_ip.clear();
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(ptm_pool_record_payout_requires_admin_token) {
   namespace fs = std::filesystem;
   auto tmp = fs::temp_directory_path() / "phx_ptm_pool_payout";
-  fs::remove_all(tmp); fs::create_directories(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); } fs::create_directories(tmp);
   auto chain = phantomx::blockchain::ChainDatabase::open(tmp / "chain.db");
   PHX_EXPECT(chain.ok()); if (!chain.ok()) return;
   phantomx::Mempool mempool; phantomx::pool::PoolLedger pool; phantomx::aggregator::AggregationEngine agg;
@@ -726,13 +726,13 @@ PHX_TEST(ptm_pool_record_payout_requires_admin_token) {
   // May fail for business validation (worker/epoch/finalized), but must not fail with admin auth error.
   if(!r3.ok) PHX_EXPECT(r3.error_message.find("admin_token") == std::string::npos);
   unsetenv("PHANTOMX_ADMIN_TOKEN");
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(rpc_invalid_height_and_nblocks_rejected_cleanly) {
   namespace fs = std::filesystem;
   auto tmp = fs::temp_directory_path() / "phx_rpc_badnum";
-  fs::remove_all(tmp); fs::create_directories(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); } fs::create_directories(tmp);
   auto chain = phantomx::blockchain::ChainDatabase::open(tmp / "chain.db");
   PHX_EXPECT(chain.ok()); if (!chain.ok()) return;
   phantomx::Mempool mempool; phantomx::pool::PoolLedger pool; phantomx::aggregator::AggregationEngine agg;
@@ -748,13 +748,13 @@ PHX_TEST(rpc_invalid_height_and_nblocks_rejected_cleanly) {
   auto r2 = server.call(gen, 2);
   PHX_EXPECT(!r2.ok);
   PHX_EXPECT(r2.error_message.find("invalid nblocks") != std::string::npos);
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(ptm_pool_invalid_numeric_params_rejected_cleanly) {
   namespace fs = std::filesystem;
   auto tmp = fs::temp_directory_path() / "phx_ptm_pool_badnum";
-  fs::remove_all(tmp); fs::create_directories(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); } fs::create_directories(tmp);
   auto chain = phantomx::blockchain::ChainDatabase::open(tmp / "chain.db");
   PHX_EXPECT(chain.ok()); if (!chain.ok()) return;
   phantomx::Mempool mempool; phantomx::pool::PoolLedger pool; phantomx::aggregator::AggregationEngine agg;
@@ -784,13 +784,13 @@ PHX_TEST(ptm_pool_invalid_numeric_params_rejected_cleanly) {
   PHX_EXPECT(!r4.ok);
   PHX_EXPECT(r4.error_message.find("invalid amount_atoms") != std::string::npos);
   unsetenv("PHANTOMX_ADMIN_TOKEN");
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(ptm006_bootstrap_finality_requires_explicit_opt_in) {
   namespace fs = std::filesystem;
   auto tmp = fs::temp_directory_path() / "phx_ptm006";
-  fs::remove_all(tmp); fs::create_directories(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); } fs::create_directories(tmp);
   unsetenv("PHANTOMX_POI_BOOTSTRAP_ALLOW");
   auto chain = phantomx::blockchain::ChainDatabase::open(tmp / "chain.db");
   PHX_EXPECT(chain.ok()); if (!chain.ok()) return;
@@ -804,13 +804,13 @@ PHX_TEST(ptm006_bootstrap_finality_requires_explicit_opt_in) {
   PHX_EXPECT(fir.ok);
   PHX_EXPECT(fir.result.count("finalized_height"));
   PHX_EXPECT(fir.result.at("finalized_height") == "0");
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(ptm015c1_pending_verifier_cannot_attest_or_heartbeat_until_activated) {
   namespace fs = std::filesystem;
   auto tmp = fs::temp_directory_path() / "phx_ptm015c1_pending";
-  fs::remove_all(tmp); fs::create_directories(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); } fs::create_directories(tmp);
   auto chain = phantomx::blockchain::ChainDatabase::open(tmp / "chain.db");
   PHX_EXPECT(chain.ok()); if (!chain.ok()) return;
   phantomx::Mempool mempool; phantomx::pool::PoolLedger pool; phantomx::aggregator::AggregationEngine agg;
@@ -847,7 +847,7 @@ PHX_TEST(ptm015c1_pending_verifier_cannot_attest_or_heartbeat_until_activated) {
   phantomx::rpc::RpcRequest act; act.id="act"; act.method="verifier_set_status"; act.auth_token="t"; act.params["id"]="v1"; act.params["status"]="ACTIVE"; act.params["admin_token"]="adm";
   PHX_EXPECT(server.call(act,4).ok);
   PHX_EXPECT(server.call(hb,5).ok);
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(ptm015c2_pop_v1_vector_and_mutation) {
@@ -956,7 +956,7 @@ PHX_TEST(ptm015c2_pop_v1_vector_and_mutation) {
 PHX_TEST(ptm015c5_challenge_db_independent_connections_single_consume) {
   namespace fs = std::filesystem;
   auto tmp = fs::temp_directory_path() / "phx_ptm015c5_db";
-  fs::remove_all(tmp); fs::create_directories(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); } fs::create_directories(tmp);
   auto dbpath = tmp / "chain.db";
   // create DB and challenge via normal API
   auto chain = phantomx::blockchain::ChainDatabase::open(dbpath);
@@ -983,13 +983,13 @@ PHX_TEST(ptm015c5_challenge_db_independent_connections_single_consume) {
   auto got = c3.value().get_verifier_challenge(rec.challenge_id);
   PHX_EXPECT(got.ok() && got.value().has_value());
   PHX_EXPECT(got.value()->used_at.has_value());
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(ptm015c1_challenge_replay_rejected) {
   namespace fs = std::filesystem;
   auto tmp = fs::temp_directory_path() / "phx_ptm015c1_replay";
-  fs::remove_all(tmp); fs::create_directories(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); } fs::create_directories(tmp);
   auto chain = phantomx::blockchain::ChainDatabase::open(tmp / "chain.db");
   PHX_EXPECT(chain.ok()); if (!chain.ok()) return;
   phantomx::Mempool mempool; phantomx::pool::PoolLedger pool; phantomx::aggregator::AggregationEngine agg;
@@ -1008,13 +1008,13 @@ PHX_TEST(ptm015c1_challenge_replay_rejected) {
   PHX_EXPECT(server.call(reg,2).ok);
   auto replay = server.call(reg,3);
   PHX_EXPECT(!replay.ok);
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(ptm004_attestation_replay_and_stale_rejected) {
   namespace fs = std::filesystem;
   auto tmp = fs::temp_directory_path() / "phx_ptm004";
-  fs::remove_all(tmp); fs::create_directories(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); } fs::create_directories(tmp);
   unsetenv("PHANTOMX_POI_BOOTSTRAP_ALLOW");
   auto chain = phantomx::blockchain::ChainDatabase::open(tmp / "chain.db");
   PHX_EXPECT(chain.ok()); if (!chain.ok()) return;
@@ -1066,7 +1066,7 @@ PHX_TEST(ptm004_attestation_replay_and_stale_rejected) {
   stale.params["signature"]=phantomx::crypto::serialize_signature_hex(sig2.value());
   auto rs = server.call(stale,4);
   PHX_EXPECT(!rs.ok);
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(poi_composite_required_bandwidth_pairs) {
@@ -1148,7 +1148,7 @@ PHX_TEST(ptm015c7_pop_v1_signature_field_mutations_production) {
 PHX_TEST(ptm015c7_challenge_boundary_8_9_per_identity) {
   namespace fs = std::filesystem;
   auto tmp = fs::temp_directory_path() / "phx_ptm015c7_cap";
-  fs::remove_all(tmp); fs::create_directories(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); } fs::create_directories(tmp);
   auto chain = phantomx::blockchain::ChainDatabase::open(tmp/"chain.db"); PHX_EXPECT(chain.ok()); if(!chain.ok()) return;
   const uint64_t now=1000;
   for(int i=0;i<8;++i){
@@ -1172,12 +1172,12 @@ PHX_TEST(ptm015c7_challenge_boundary_8_9_per_identity) {
   PHX_EXPECT(c.ok() && c.value());
   auto cntAfter = chain.value().count_active_verifier_challenges_for("v1","o1",now+1);
   PHX_EXPECT(cntAfter.ok() && cntAfter.value()==8);
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(ptm015c7_challenge_cleanup_expired_opens_capacity) {
   namespace fs=std::filesystem;
-  auto tmp=fs::temp_directory_path()/"phx_ptm015c7_cleanup"; fs::remove_all(tmp); fs::create_directories(tmp);
+  auto tmp=fs::temp_directory_path()/"phx_ptm015c7_cleanup"; { std::error_code _ec; fs::remove_all(tmp, _ec); } fs::create_directories(tmp);
   auto chain=phantomx::blockchain::ChainDatabase::open(tmp/"chain.db"); PHX_EXPECT(chain.ok()); if(!chain.ok()) return;
   phantomx::blockchain::ChainDatabase::VerifierChallengeRecord r{};
   r.challenge_id=std::string(64,'e'); r.verifier_id="v1"; r.pubkey_hex=std::string(64,'2'); r.owner="o1"; r.network="regtest";
@@ -1189,7 +1189,7 @@ PHX_TEST(ptm015c7_challenge_cleanup_expired_opens_capacity) {
   PHX_EXPECT(cl.ok());
   auto got = chain.value().get_verifier_challenge(r.challenge_id);
   PHX_EXPECT(got.ok() && !got.value().has_value()); // expired unused cleaned
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }
 
 PHX_TEST(ptm015c11r8_quota_tx_observer_records_stages) {
@@ -1265,7 +1265,7 @@ PHX_TEST(ptm015c11r10_sqlite_connection_lifecycle_events) {
 
 PHX_TEST(ptm015c7_lifecycle_pending_rejected_active_allowed_local) {
   namespace fs=std::filesystem;
-  auto tmp=fs::temp_directory_path()/"phx_ptm015c7_life"; fs::remove_all(tmp); fs::create_directories(tmp);
+  auto tmp=fs::temp_directory_path()/"phx_ptm015c7_life"; { std::error_code _ec; fs::remove_all(tmp, _ec); } fs::create_directories(tmp);
   unsetenv("PHANTOMX_POI_BOOTSTRAP_ALLOW");
   auto chain=phantomx::blockchain::ChainDatabase::open(tmp/"chain.db"); PHX_EXPECT(chain.ok()); if(!chain.ok()) return;
   phantomx::Mempool mempool; phantomx::pool::PoolLedger pool; phantomx::aggregator::AggregationEngine agg;
@@ -1302,5 +1302,5 @@ PHX_TEST(ptm015c7_lifecycle_pending_rejected_active_allowed_local) {
   phantomx::rpc::RpcRequest rev=act; rev.id="rv"; rev.params["status"]="REVOKED"; PHX_EXPECT(server.call(rev,8).ok);
   PHX_EXPECT(!server.call(hb,9).ok);
   unsetenv("PHANTOMX_ADMIN_TOKEN");
-  fs::remove_all(tmp);
+  { std::error_code _ec; fs::remove_all(tmp, _ec); }
 }

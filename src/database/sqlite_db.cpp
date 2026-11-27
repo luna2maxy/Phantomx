@@ -403,12 +403,25 @@ Result<void> SqliteDb::close() {
   std::scoped_lock _lk(mu_);
   if (db_ == nullptr) return Result<void>{};
   emit_conn_event("CLOSE_ATTEMPT", "sqlite3_close", true, nullptr, 0);
-  const int rc = sqlite3_close(db_);
+  int rc = sqlite3_close(db_);
+  if (rc == SQLITE_BUSY) {
+    sqlite3_stmt* stmt = sqlite3_next_stmt(db_, nullptr);
+    while (stmt != nullptr) {
+      sqlite3_stmt* next = sqlite3_next_stmt(db_, stmt);
+      sqlite3_finalize(stmt);
+      stmt = next;
+    }
+    rc = sqlite3_close(db_);
+  }
   if (rc != SQLITE_OK) {
-    auto e = capture_error_locked(ErrorCode::kIoError, "sqlite close", "sqlite3_close", rc);
-    const auto d = last_diag_;
-    emit_conn_event("CLOSE_FAILURE", "sqlite3_close", false, &d, 0);
-    return e;
+    // Fallback to close_v2 to avoid leaking on unexpected busy states.
+    const int rc2 = sqlite3_close_v2(db_);
+    if (rc2 != SQLITE_OK && rc2 != SQLITE_BUSY) {
+      auto e = capture_error_locked(ErrorCode::kIoError, "sqlite close", "sqlite3_close_v2", rc2);
+      const auto d = last_diag_;
+      emit_conn_event("CLOSE_FAILURE", "sqlite3_close_v2", false, &d, 0);
+      return e;
+    }
   }
   db_ = nullptr;
   emit_conn_event("CLOSE_SUCCESS", "sqlite3_close", true, nullptr, 0);
