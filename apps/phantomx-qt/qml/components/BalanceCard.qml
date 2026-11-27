@@ -85,10 +85,20 @@ Rectangle {
                 Text { id: netLabel; anchors.centerIn: parent; text: root.network; color: Theme.error; font.pixelSize: Theme.fontCaption; font.weight: Theme.weightDemi }
             }
 
-            IconButton {
-                iconText: root.hideBalance ? "◌" : "●"
-                tooltipText: root.hideBalance ? qsTr("Show balance") : qsTr("Hide balance")
-                onClicked: root.hideBalance = !root.hideBalance
+            Item {
+                Layout.preferredWidth: toggle.implicitWidth + 10
+                Layout.preferredHeight: toggle.implicitHeight
+
+                IconButton {
+                    id: toggle
+                    anchors.right: parent.right
+                    anchors.rightMargin: 10
+                    anchors.top: parent.top
+                    anchors.topMargin: -10
+                    iconText: root.hideBalance ? "◌" : "●"
+                    tooltipText: root.hideBalance ? qsTr("Show balance") : qsTr("Hide balance")
+                    onClicked: root.hideBalance = !root.hideBalance
+                }
             }
         }
 

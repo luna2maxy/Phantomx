@@ -15,6 +15,20 @@ Entry format (always write entries in **English** — see `docs/DEVELOPMENT.md`)
 
 ---
 
+## 2026-11-27 — Shift Qt wallet hide/show balance toggle
+
+- **Time (UTC):** 2026-11-27T13:51:23Z
+- **Action:**
+  - Moved only the sidebar hide/show balance toggle in `BalanceCard.qml` 10px left and 10px up from its previous position.
+  - Wrapped the existing `IconButton` in a sizing `Item` so the row geometry and all neighboring elements stay unchanged.
+- **Reason/Request:** User: "The hide/show balance toggle is too far right; move it 10px left and 10px up."
+- **Files changed:** `apps/phantomx-qt/qml/components/BalanceCard.qml`, `docs/CHANGELOG_ACTIONS.md`.
+- **Verification:**
+  - `cmake --build build --target phantomx-qt -j$(nproc)` → success; `BalanceCard.qml` was recompiled into the Qt resource and QML cache.
+  - `QT_QPA_PLATFORM=offscreen timeout 5 ./build/bin/phantomx-qt` → no QML/runtime errors in output (exit `124` is the expected timeout for the long-running GUI).
+  - `ctest --test-dir build --output-on-failure -j4` → **11/11 passed**.
+  - `git diff --check` → clean.
+
 ## 2026-11-27 — Show immature balance in Qt wallet Overview
 
 - **Time (UTC):** 2026-11-27T13:48:57Z
