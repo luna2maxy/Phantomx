@@ -233,7 +233,7 @@ Result<void> ChainDatabase::put_verifier_challenge_with_quota(const VerifierChal
 
   emit(0, 0, "CONNECTION_OPEN", "sqlite3_open_v2", true, nullptr, 0, false, false, false, nullptr, nullptr, "");
 
-  for (int attempt = 0; attempt < 20; ++attempt) {
+  for (std::uint32_t attempt = 0; attempt < 20; ++attempt) {
     const std::uint64_t tx_id = ++g_quota_tx_seq;
     const auto t0 = std::chrono::steady_clock::now();
     auto us_since = [&]()->std::int64_t { return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now()-t0).count(); };

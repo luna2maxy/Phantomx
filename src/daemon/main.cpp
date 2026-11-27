@@ -36,7 +36,7 @@ namespace {
 constexpr const char* kName = "phantomxd";
 constexpr const char* kVersion = "0.1.0";
 constexpr std::uint64_t kMaxViewJump = 16;
-std::uint16_t get_port(const phantomx::ParsedArgs& a, const char* key, std::uint16_t fallback) {
+[[maybe_unused]] std::uint16_t get_port(const phantomx::ParsedArgs& a, const char* key, std::uint16_t fallback) {
   const auto it = a.options.find(key);
   return it == a.options.end() || it->second.empty() ? fallback : static_cast<std::uint16_t>(std::stoul(it->second));
 }
@@ -318,7 +318,7 @@ int main(int argc, char* argv[]) {
                                    const phantomx::Hash256Bytes& hash) {
     return validated_proposals.count(proposal_key(epoch, view, height, hash)) != 0;
   };
-  auto defer_vote = [&](const phantomx::consensus::Vote& v) {
+  [[maybe_unused]] auto defer_vote = [&](const phantomx::consensus::Vote& v) {
     std::scoped_lock ql(pending_mu);
     const bool dup = std::any_of(deferred_votes.begin(), deferred_votes.end(), [&](const auto& x) {
       return x.validator_pubkey == v.validator_pubkey && x.phase == v.phase &&
@@ -333,7 +333,7 @@ int main(int argc, char* argv[]) {
     if (!dup) deferred_qcs.push_back(qc);
     return !dup;
   };
-  auto defer_finality = [&](const phantomx::consensus::FinalityCertificate& f) {
+  [[maybe_unused]] auto defer_finality = [&](const phantomx::consensus::FinalityCertificate& f) {
     std::scoped_lock ql(pending_mu);
     const bool dup = std::any_of(deferred_finality.begin(), deferred_finality.end(), [&](const auto& x) {
       return x.height == f.height && x.block_hash == f.block_hash;

@@ -30,7 +30,7 @@ inline std::uint8_t pop_network_u8(phantomx::Network n) {
 inline void pop_push_u16_le(std::vector<std::uint8_t>& out, std::uint16_t v){ out.push_back(static_cast<std::uint8_t>(v&0xFF)); out.push_back(static_cast<std::uint8_t>((v>>8)&0xFF)); }
 inline void pop_push_u64_le(std::vector<std::uint8_t>& out, std::uint64_t v){ for(int i=0;i<8;++i) out.push_back(static_cast<std::uint8_t>((v>>(8*i))&0xFF)); }
 inline bool pop_read_u16_le(const std::vector<std::uint8_t>& in, size_t& off, std::uint16_t& v){ if(off+2>in.size()) return false; v=static_cast<std::uint16_t>(in[off])| (static_cast<std::uint16_t>(in[off+1])<<8); off+=2; return true; }
-inline bool pop_read_u64_le(const std::vector<std::uint8_t>& in, size_t& off, std::uint64_t& v){ if(off+8>in.size()) return false; v=0; for(int i=0;i<8;++i) v |= (static_cast<std::uint64_t>(in[off+i])<<(8*i)); off+=8; return true; }
+inline bool pop_read_u64_le(const std::vector<std::uint8_t>& in, size_t& off, std::uint64_t& v){ if(off+8>in.size()) return false; v=0; for(int i=0;i<8;++i) v |= (static_cast<std::uint64_t>(in[off+static_cast<size_t>(i)])<<(8*i)); off+=8; return true; }
 
 inline bool encode_pop_payload_v1(const PopPayloadFieldsV1& f, std::vector<std::uint8_t>& out){
   if (f.verifier_id.empty() || f.verifier_id.size()>64) return false;
@@ -57,20 +57,31 @@ inline bool encode_pop_payload_v1(const PopPayloadFieldsV1& f, std::vector<std::
 inline bool decode_pop_payload_v1(const std::vector<std::uint8_t>& in, PopPayloadFieldsV1& f){
   size_t off=0;
   if (in.size() < 10+2+1+2+1+2+32+2+32+32+8+8) return false;
-  for(int i=0;i<10;++i){ if(in[off+i] != static_cast<std::uint8_t>(kPopMagicV1[i])) return false; }
+  for(size_t i=0;i<10;++i){ if(in[off+i] != static_cast<std::uint8_t>(kPopMagicV1[i])) return false; }
   off += 10;
   std::uint16_t ver=0, proto=0, vid_len=0, owner_len=0;
   if(!pop_read_u16_le(in,off,ver) || ver!=1) return false;
-  if(off>=in.size()) return false; f.network_u8=in[off++];
+  if(off>=in.size()) return false;
+  f.network_u8=in[off++];
   if(!pop_read_u16_le(in,off,proto) || proto!=1) return false;
-  if(off>=in.size()) return false; std::uint8_t op=in[off++]; if(op!=1) return false;
+  if(off>=in.size()) return false;
+  std::uint8_t op=in[off++];
+  if(op!=1) return false;
   if(!pop_read_u16_le(in,off,vid_len) || vid_len==0 || vid_len>64 || off+vid_len>in.size()) return false;
-  f.verifier_id.assign(reinterpret_cast<const char*>(&in[off]), reinterpret_cast<const char*>(&in[off+vid_len])); off+=vid_len;
-  if(off+32>in.size()) return false; std::copy(in.begin()+static_cast<std::ptrdiff_t>(off),in.begin()+static_cast<std::ptrdiff_t>(off+32),f.pubkey.begin()); off+=32;
+  f.verifier_id.assign(reinterpret_cast<const char*>(&in[off]), reinterpret_cast<const char*>(&in[off+vid_len]));
+  off+=vid_len;
+  if(off+32>in.size()) return false;
+  std::copy(in.begin()+static_cast<std::ptrdiff_t>(off),in.begin()+static_cast<std::ptrdiff_t>(off+32),f.pubkey.begin());
+  off+=32;
   if(!pop_read_u16_le(in,off,owner_len) || owner_len==0 || owner_len>128 || off+owner_len>in.size()) return false;
-  f.owner.assign(reinterpret_cast<const char*>(&in[off]), reinterpret_cast<const char*>(&in[off+owner_len])); off+=owner_len;
-  if(off+32>in.size()) return false; std::copy(in.begin()+static_cast<std::ptrdiff_t>(off),in.begin()+static_cast<std::ptrdiff_t>(off+32),f.challenge_id.begin()); off+=32;
-  if(off+32>in.size()) return false; std::copy(in.begin()+static_cast<std::ptrdiff_t>(off),in.begin()+static_cast<std::ptrdiff_t>(off+32),f.nonce.begin()); off+=32;
+  f.owner.assign(reinterpret_cast<const char*>(&in[off]), reinterpret_cast<const char*>(&in[off+owner_len]));
+  off+=owner_len;
+  if(off+32>in.size()) return false;
+  std::copy(in.begin()+static_cast<std::ptrdiff_t>(off),in.begin()+static_cast<std::ptrdiff_t>(off+32),f.challenge_id.begin());
+  off+=32;
+  if(off+32>in.size()) return false;
+  std::copy(in.begin()+static_cast<std::ptrdiff_t>(off),in.begin()+static_cast<std::ptrdiff_t>(off+32),f.nonce.begin());
+  off+=32;
   if(!pop_read_u64_le(in,off,f.issued_at)) return false;
   if(!pop_read_u64_le(in,off,f.expires_at)) return false;
   if(off != in.size()) return false;

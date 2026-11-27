@@ -25,8 +25,8 @@ std::string trim_copy(std::string s) {
 
 bool is_hex_string(const std::string& s) {
   if (s.empty()) return false;
-  for (unsigned char c : s) {
-    if (!std::isxdigit(c)) return false;
+  for (char ch : s) {
+    if (!std::isxdigit(static_cast<unsigned char>(ch))) return false;
   }
   return true;
 }

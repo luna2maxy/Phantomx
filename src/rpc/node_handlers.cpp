@@ -125,7 +125,7 @@ static std::string poi_effective_machine(const std::string& participant, const s
   return participant; // backward compatible
 }
 
-static bool poi_ip_reject_conflict(const std::string& ip, const std::string& owner_address, const std::string& participant_id, std::string& reason) {
+static bool poi_ip_reject_conflict(const std::string& ip, const std::string& owner_address, [[maybe_unused]] const std::string& participant_id, std::string& reason) {
   if (ip.empty()) return false; // local/internal calls; cannot enforce IP policy
   auto it = g_poi_ip_bindings.find(ip);
   if (it == g_poi_ip_bindings.end()) return false;
@@ -177,7 +177,7 @@ static void poi_save_identity_bindings() {
   json_decref(root);
 }
 
-static void poi_load_identity_bindings() {
+[[maybe_unused]] static void poi_load_identity_bindings() {
   g_poi_identity_by_owner.clear();
   g_poi_owner_by_identity_pubkey.clear();
   if (g_poi_identity_path.empty()) return;
@@ -429,7 +429,7 @@ void poi_upsert_participant_locked(const std::string& id, std::uint64_t bandwidt
   if (p.uptime_ok < p.uptime_expected) ++p.uptime_ok;
 }
 
-void poi_upsert_participant(const std::string& id, std::uint64_t bandwidth_bytes, const std::string& unit, bool running) {
+[[maybe_unused]] void poi_upsert_participant(const std::string& id, std::uint64_t bandwidth_bytes, const std::string& unit, bool running) {
   std::scoped_lock lk(g_poi_mu);
   poi_upsert_participant_locked(id, bandwidth_bytes, unit, running);
 }
@@ -1156,7 +1156,7 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
     const std::string net(phantomx::network_name(network));
     return std::string("PHX/poi/attest/v2|") + net + "|1|" + std::to_string(epoch) + "|" + block_hash_hex + "|" + std::to_string(height) + "|" + verifier_pubkey_hex + "|" + std::to_string(ts);
   };
-  auto poi_attestation_replay_key = [](const std::string& block_hash_hex, const std::string& verifier_pubkey_hex, std::uint64_t epoch) {
+  [[maybe_unused]] auto poi_attestation_replay_key = [](const std::string& block_hash_hex, const std::string& verifier_pubkey_hex, std::uint64_t epoch) {
     return block_hash_hex + "|" + verifier_pubkey_hex + "|" + std::to_string(epoch);
   };
   auto poi_verify_attestation_sig = [&](const std::string& verifier_pubkey_hex, const std::string& signature_hex, const std::string& msg) -> bool {
@@ -1169,7 +1169,7 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
     std::copy(sigb.begin(), sigb.end(), sig.bytes.begin());
     return phantomx::crypto::verify(std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(msg.data()), msg.size()), sig, pk);
   };
-  auto poi_record_block = [&](std::uint64_t height, const std::string& block_hash_hex) {
+  [[maybe_unused]] auto poi_record_block = [&](std::uint64_t height, const std::string& block_hash_hex) {
     // PTM-001/PTM-006: block recording tracks quorum policy but does not finalize without
     // validated attestations. Bootstrap auto-finalization is disabled by default; it can only
     // be explicitly enabled for isolated dev/regtest via PHANTOMX_POI_BOOTSTRAP_ALLOW=1.
@@ -1629,7 +1629,7 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
       if (has_epoch) json_object_set_new(gp, "epoch", json_integer(static_cast<json_int_t>(epoch)));
       json_object_set_new(gp, "domain_version", json_string(has_epoch ? "v2" : "v1"));
       char* gt = json_dumps(gp, JSON_COMPACT);
-      if (gt) { p2p->broadcast_poi_attestation(gt); free(gt); }
+      if (gt) { (void)p2p->broadcast_poi_attestation(gt); free(gt); }
       json_decref(gp);
     }
 

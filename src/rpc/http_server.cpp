@@ -12,7 +12,13 @@
 
 #include <jansson.h>
 
-#if !defined(_WIN32)
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -24,6 +30,18 @@
 namespace phantomx::rpc {
 thread_local std::string g_rpc_remote_ip;
 namespace {
+
+#ifdef _WIN32
+using socket_t = SOCKET;
+inline constexpr socket_t kInvalidSocket = INVALID_SOCKET;
+inline int close_socket(socket_t s) { return ::closesocket(s); }
+using ssize_type = std::ptrdiff_t;
+#else
+using socket_t = int;
+inline constexpr socket_t kInvalidSocket = -1;
+inline int close_socket(socket_t s) { return ::close(s); }
+using ssize_type = ssize_t;
+#endif
 
 constexpr std::size_t kMaxRequestBytes = 1u << 20;  // 1 MiB
 constexpr char kVersionHeader[] = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n";
@@ -80,26 +98,35 @@ Result<RawRequest> parse_request(const std::string& raw) {
   return req;
 }
 
-ssize_t send_all(int fd, const char* data, std::size_t len) {
+ssize_type send_all(socket_t fd, const char* data, std::size_t len) {
   std::size_t sent = 0;
   while (sent < len) {
+#ifdef _WIN32
+    const int n = ::send(fd, data + sent, static_cast<int>(len - sent), 0);
+    if (n <= 0) return -1;
+#else
     const ssize_t n = ::send(fd, data + sent, len - sent, 0);
-    if (n < 0) return -1;
+    if (n < 0) {
+      if (errno == EINTR) continue;
+      return -1;
+    }
+    if (n == 0) return -1;
+#endif
     sent += static_cast<std::size_t>(n);
   }
-  return static_cast<ssize_t>(sent);
+  return static_cast<ssize_type>(sent);
 }
 
-void respond_json(int fd, const std::string& json_body) {
+void respond_json(socket_t fd, const std::string& json_body) {
   std::string head = std::string(kVersionHeader) + "Content-Length: " + std::to_string(json_body.size()) +
                      "\r\nConnection: close\r\n\r\n";
   send_all(fd, head.data(), head.size());
   send_all(fd, json_body.data(), json_body.size());
 }
 
-void respond_bad_request(int fd) { (void)send_all(fd, kCloseHeader, std::strlen(kCloseHeader)); }
+void respond_bad_request(socket_t fd) { (void)send_all(fd, kCloseHeader, std::strlen(kCloseHeader)); }
 
-void respond_forbidden(int fd) {
+void respond_forbidden(socket_t fd) {
   static constexpr char kForbidden[] =
       "HTTP/1.1 403 Forbidden\r\nContent-Type: application/json\r\nContent-Length: 55\r\nConnection: close\r\n\r\n"
       "{\"error\":{\"code\":-32002,\"message\":\"rpc not allowed\"}}";
@@ -117,16 +144,20 @@ bool ip_allowed(const std::string& peer_ip, const std::vector<std::string>& allo
   return false;
 }
 
-std::string peer_ip_from_fd(int fd) {
+std::string peer_ip_from_fd(socket_t fd) {
   sockaddr_in peer{};
+#ifdef _WIN32
+  int len = sizeof(peer);
+#else
   socklen_t len = sizeof(peer);
+#endif
   if (::getpeername(fd, reinterpret_cast<sockaddr*>(&peer), &len) != 0) return {};
   char buf[INET_ADDRSTRLEN] = {};
   if (::inet_ntop(AF_INET, &peer.sin_addr, buf, sizeof(buf)) == nullptr) return {};
   return std::string(buf);
 }
 
-void handle_connection(int fd, RpcServer& server, const std::vector<std::string>& allow_ips) {
+void handle_connection(socket_t fd, RpcServer& server, const std::vector<std::string>& allow_ips) {
   const auto peer_ip = peer_ip_from_fd(fd);
   if (!ip_allowed(peer_ip, allow_ips)) {
     respond_forbidden(fd);
@@ -153,8 +184,17 @@ void handle_connection(int fd, RpcServer& server, const std::vector<std::string>
       }
     }
     if (header_end != std::string::npos && raw.size() >= header_end + content_length) break;
-    const ssize_t n = ::recv(fd, buf, sizeof buf, 0);
+#ifdef _WIN32
+    const int n = ::recv(fd, buf, static_cast<int>(sizeof buf), 0);
     if (n <= 0) return;
+#else
+    const ssize_t n = ::recv(fd, buf, sizeof buf, 0);
+    if (n < 0) {
+      if (errno == EINTR) continue;
+      return;
+    }
+    if (n == 0) return;
+#endif
     raw.append(buf, static_cast<std::size_t>(n));
   }
   const std::string body = raw.substr(header_end == std::string::npos ? 0 : header_end,
@@ -182,10 +222,25 @@ void set_rpc_allow_ips(std::vector<std::string> ips) { g_rpc_allow_ips = std::mo
 
 Result<void> serve_rpc(RpcServer& server, const std::string& bind_host, std::uint16_t port,
                        const std::vector<std::string>& allow_ips) {
-  const int listen_fd = ::socket(AF_INET, SOCK_STREAM, 0);
-  if (listen_fd < 0) return MakeError(ErrorCode::kIoError, "socket failed: " + std::string(std::strerror(errno)));
+#ifdef _WIN32
+  WSADATA wsa{};
+  if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+    return MakeError(ErrorCode::kIoError, "WSAStartup failed");
+  }
+#endif
+  const socket_t listen_fd = ::socket(AF_INET, SOCK_STREAM, 0);
+  if (listen_fd == kInvalidSocket) {
+#ifdef _WIN32
+    WSACleanup();
+#endif
+    return MakeError(ErrorCode::kIoError, "socket failed: " + std::string(std::strerror(errno)));
+  }
   int opt = 1;
-  ::setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof opt);
+#ifdef _WIN32
+  ::setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&opt), sizeof(opt));
+#else
+  ::setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+#endif
 
   sockaddr_in addr{};
   addr.sin_family = AF_INET;
@@ -193,15 +248,24 @@ Result<void> serve_rpc(RpcServer& server, const std::string& bind_host, std::uin
   if (bind_host.empty() || bind_host == "0.0.0.0") {
     addr.sin_addr.s_addr = INADDR_ANY;
   } else if (::inet_pton(AF_INET, bind_host.c_str(), &addr.sin_addr) != 1) {
-    ::close(listen_fd);
+    close_socket(listen_fd);
+#ifdef _WIN32
+    WSACleanup();
+#endif
     return MakeError(ErrorCode::kInvalidArgument, "invalid bind host: " + bind_host);
   }
-  if (::bind(listen_fd, reinterpret_cast<sockaddr*>(&addr), sizeof addr) != 0) {
-    ::close(listen_fd);
+  if (::bind(listen_fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) != 0) {
+    close_socket(listen_fd);
+#ifdef _WIN32
+    WSACleanup();
+#endif
     return MakeError(ErrorCode::kIoError, "bind failed: " + std::string(std::strerror(errno)));
   }
   if (::listen(listen_fd, SOMAXCONN) != 0) {
-    ::close(listen_fd);
+    close_socket(listen_fd);
+#ifdef _WIN32
+    WSACleanup();
+#endif
     return MakeError(ErrorCode::kIoError, "listen failed: " + std::string(std::strerror(errno)));
   }
   std::cerr << "phantomxd: rpc listening on http://" << bind_host << ":" << port << std::endl;
@@ -209,19 +273,31 @@ Result<void> serve_rpc(RpcServer& server, const std::string& bind_host, std::uin
   const auto effective_allow = allow_ips.empty() ? g_rpc_allow_ips : allow_ips;
   while (true) {
     sockaddr_in peer{};
+#ifdef _WIN32
+    int peer_len = sizeof(peer);
+#else
     socklen_t peer_len = sizeof(peer);
-    const int conn = ::accept(listen_fd, reinterpret_cast<sockaddr*>(&peer), &peer_len);
-    if (conn < 0) {
+#endif
+    const socket_t conn = ::accept(listen_fd, reinterpret_cast<sockaddr*>(&peer), &peer_len);
+    if (conn == kInvalidSocket) {
+#ifndef _WIN32
       if (errno == EINTR) continue;
+#endif
       continue;
     }
+#ifdef _WIN32
+    DWORD tv = 5000;
+    ::setsockopt(conn, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&tv), sizeof(tv));
+    ::setsockopt(conn, SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<const char*>(&tv), sizeof(tv));
+#else
     timeval tv{};
     tv.tv_sec = 5;
     tv.tv_usec = 0;
     ::setsockopt(conn, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
     ::setsockopt(conn, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+#endif
     handle_connection(conn, server, effective_allow);
-    ::close(conn);
+    close_socket(conn);
   }
 }
 

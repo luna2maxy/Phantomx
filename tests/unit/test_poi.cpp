@@ -829,7 +829,7 @@ PHX_TEST(ptm015c1_pending_verifier_cannot_attest_or_heartbeat_until_activated) {
   auto hbr = server.call(hb,2); PHX_EXPECT(!hbr.ok);
 
   // PENDING verifier cannot attest
-  const std::string bh(64,'c'); uint64_t h=1; uint64_t ts=static_cast<uint64_t>(std::time(nullptr));
+  const std::string bh(64,'c'); uint64_t ts=static_cast<uint64_t>(std::time(nullptr));
   const std::string msg = std::string("PHX_POI_ATTEST_V1|")+bh+"|1|"+pkhex+"|"+std::to_string(ts);
   auto asig = phantomx::crypto::sign(std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(msg.data()), msg.size()), kp.value().sec);
   phantomx::rpc::RpcRequest a; a.id="a"; a.method="poi_submit_attestation"; a.auth_token="t";

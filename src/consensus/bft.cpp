@@ -804,7 +804,7 @@ Result<void> BftEngine::save_state(const std::string& path) const {
   w.write_u32(static_cast<std::uint32_t>(slashed_validators_.size()));
   for (const auto& who : slashed_validators_) {
     w.write_u32(static_cast<std::uint32_t>(who.size()));
-    for (unsigned char c : who) w.write_u8(c);
+    for (char ch : who) w.write_u8(static_cast<std::uint8_t>(static_cast<unsigned char>(ch)));
   }
   w.write_u32(static_cast<std::uint32_t>(equivocations_.size()));
   for (const auto& ev : equivocations_) {

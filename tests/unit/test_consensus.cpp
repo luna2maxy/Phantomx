@@ -599,7 +599,7 @@ PHX_TEST(consensus_new_view_fallback_when_nominal_proposer_is_down) {
   const auto nominal = phantomx::consensus::select_proposer(vs, 0, 1);
   std::size_t down = keys.size();
   for (std::size_t i = 0; i < keys.size(); ++i) {
-    if (keys[i].pub.bytes == nominal) { down = i; break; }
+    if (keys[static_cast<std::size_t>(i)].pub.bytes == nominal) { down = i; break; }
   }
   PHX_EXPECT(down < keys.size());
 
@@ -608,9 +608,9 @@ PHX_TEST(consensus_new_view_fallback_when_nominal_proposer_is_down) {
     if (i == down) continue;
     phantomx::consensus::ViewChange vc;
     vc.epoch = 0; vc.height = 0; vc.new_view = 1;
-    vc.validator_pubkey = keys[i].pub.bytes; vc.voting_power = 10;
+    vc.validator_pubkey = keys[static_cast<std::size_t>(i)].pub.bytes; vc.voting_power = 10;
     PHX_EXPECT(engine.submit_view_change(
-        phantomx::consensus::sign_view_change(vc, keys[i].sec).value()).ok());
+        phantomx::consensus::sign_view_change(vc, keys[static_cast<std::size_t>(i)].sec).value()).ok());
   }
   auto qc = engine.maybe_view_change_qc();
   PHX_EXPECT(qc.has_value());
@@ -737,7 +737,7 @@ PHX_TEST(consensus_commit_reveal_beacon_deterministic) {
   phantomx::consensus::BftEngine engine(make_vs(keys));
   auto make_commit = [&](int i, const phantomx::Hash256Bytes& reveal) {
     phantomx::consensus::RandomnessCommit c;
-    c.epoch = 0; c.validator_pubkey = keys[i].pub.bytes;
+    c.epoch = 0; c.validator_pubkey = keys[static_cast<std::size_t>(i)].pub.bytes;
     // commitment = sha256d(dom||reveal||pubkey||epoch)
     phantomx::BinaryWriter w; const std::string dom="PHX/rand/commit/v1";
     w.write_bytes(std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(dom.data()), dom.size()));
@@ -753,17 +753,17 @@ PHX_TEST(consensus_commit_reveal_beacon_deterministic) {
     sw.write_bytes(std::span<const std::uint8_t>(c.validator_pubkey.data(), c.validator_pubkey.size()));
     sw.write_bytes(std::span<const std::uint8_t>(c.commitment.data(), c.commitment.size()));
     auto sb=sw.take();
-    auto sig=phantomx::crypto::sign(std::span<const std::uint8_t>(sb.data(),sb.size()), keys[i].sec); PHX_EXPECT(sig.ok());
+    auto sig=phantomx::crypto::sign(std::span<const std::uint8_t>(sb.data(),sb.size()), keys[static_cast<std::size_t>(i)].sec); PHX_EXPECT(sig.ok());
     c.signature=sig.value().bytes; return c;
   };
   auto make_reveal = [&](int i, const phantomx::Hash256Bytes& reveal) {
-    phantomx::consensus::RandomnessReveal r; r.epoch=0; r.validator_pubkey=keys[i].pub.bytes; r.reveal=reveal;
+    phantomx::consensus::RandomnessReveal r; r.epoch=0; r.validator_pubkey=keys[static_cast<std::size_t>(i)].pub.bytes; r.reveal=reveal;
     phantomx::BinaryWriter sw; const std::string sdom="PHX/rand/reveal-sig/v1";
     sw.write_bytes(std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(sdom.data()), sdom.size()));
     sw.write_u64(r.epoch);
     sw.write_bytes(std::span<const std::uint8_t>(r.validator_pubkey.data(), r.validator_pubkey.size()));
     sw.write_bytes(std::span<const std::uint8_t>(r.reveal.data(), r.reveal.size()));
-    auto sb=sw.take(); auto sig=phantomx::crypto::sign(std::span<const std::uint8_t>(sb.data(),sb.size()), keys[i].sec); PHX_EXPECT(sig.ok()); r.signature=sig.value().bytes; return r;
+    auto sb=sw.take(); auto sig=phantomx::crypto::sign(std::span<const std::uint8_t>(sb.data(),sb.size()), keys[static_cast<std::size_t>(i)].sec); PHX_EXPECT(sig.ok()); r.signature=sig.value().bytes; return r;
   };
   auto r1=h(11), r2=h(22), r3=h(33);
   PHX_EXPECT(engine.submit_randomness_commit(make_commit(0,r1)).ok());
@@ -804,7 +804,7 @@ PHX_TEST(consensus_adversarial_safety_no_conflicting_finality) {
   phantomx::consensus::BftEngine engine(vs);
   auto make_cert = [&](std::uint8_t bh) {
     std::vector<phantomx::consensus::Vote> votes;
-    for (int i=0;i<3;++i){ phantomx::consensus::Vote v; v.phase=phantomx::consensus::VotePhase::kPrecommit; v.epoch=0; v.view=0; v.height=1; v.block_hash=h(bh); v.validator_pubkey=keys[i].pub.bytes; v.voting_power=10; votes.push_back(phantomx::consensus::sign_vote(v,keys[i].sec).value()); }
+    for (int i=0;i<3;++i){ phantomx::consensus::Vote v; v.phase=phantomx::consensus::VotePhase::kPrecommit; v.epoch=0; v.view=0; v.height=1; v.block_hash=h(bh); v.validator_pubkey=keys[static_cast<std::size_t>(i)].pub.bytes; v.voting_power=10; votes.push_back(phantomx::consensus::sign_vote(v,keys[static_cast<std::size_t>(i)].sec).value()); }
     auto qc = phantomx::consensus::build_qc(vs, votes).value();
     phantomx::consensus::FinalityCertificate c; c.height=1; c.block_hash=h(bh); c.precommit_qc=qc; return c;
   };
@@ -820,7 +820,7 @@ PHX_TEST(consensus_adversarial_partition_no_quorum) {
   for (int i = 0; i < 4; ++i) { auto kp = phantomx::crypto::generate_keypair(phantomx::crypto::KeyRole::kNodeIdentity); PHX_EXPECT(kp.ok()); keys.push_back(kp.value()); }
   auto vs = make_vs(keys);
   std::vector<phantomx::consensus::Vote> votes;
-  for (int i=0;i<2;++i){ phantomx::consensus::Vote v; v.phase=phantomx::consensus::VotePhase::kPrecommit; v.epoch=0; v.view=0; v.height=5; v.block_hash=h(7); v.validator_pubkey=keys[i].pub.bytes; v.voting_power=10; votes.push_back(phantomx::consensus::sign_vote(v,keys[i].sec).value()); }
+  for (int i=0;i<2;++i){ phantomx::consensus::Vote v; v.phase=phantomx::consensus::VotePhase::kPrecommit; v.epoch=0; v.view=0; v.height=5; v.block_hash=h(7); v.validator_pubkey=keys[static_cast<std::size_t>(i)].pub.bytes; v.voting_power=10; votes.push_back(phantomx::consensus::sign_vote(v,keys[static_cast<std::size_t>(i)].sec).value()); }
   auto qc = phantomx::consensus::build_qc(vs, votes);
   PHX_EXPECT(!qc.ok());
 }
@@ -840,8 +840,8 @@ PHX_TEST(consensus_liveness_simulation_view_change_recovers) {
   PHX_EXPECT_EQ(static_cast<long long>(engine.state().view), 1LL);
   // 3 validators submit view changes for view 2
   for (int i=0;i<3;++i) {
-    phantomx::consensus::ViewChange vc; vc.epoch=0; vc.height=0; vc.new_view=2; vc.validator_pubkey=keys[i].pub.bytes; vc.voting_power=10;
-    auto svc = phantomx::consensus::sign_view_change(vc, keys[i].sec); PHX_EXPECT(svc.ok());
+    phantomx::consensus::ViewChange vc; vc.epoch=0; vc.height=0; vc.new_view=2; vc.validator_pubkey=keys[static_cast<std::size_t>(i)].pub.bytes; vc.voting_power=10;
+    auto svc = phantomx::consensus::sign_view_change(vc, keys[static_cast<std::size_t>(i)].sec); PHX_EXPECT(svc.ok());
     PHX_EXPECT(engine.submit_view_change(svc.value()).ok());
   }
   auto qc = engine.maybe_view_change_qc();
@@ -901,7 +901,7 @@ std::string pb001_validators_json(const std::vector<phantomx::crypto::KeyPair>& 
   oss << "[";
   for (size_t i = 0; i < keys.size(); ++i) {
     if (i) oss << ",";
-    oss << "{\"pubkey\":\"" << phantomx::crypto::serialize_public_key_hex(keys[i].pub) << "\",\"voting_power\":1}";
+    oss << "{\"pubkey\":\"" << phantomx::crypto::serialize_public_key_hex(keys[static_cast<std::size_t>(i)].pub) << "\",\"voting_power\":1}";
   }
   oss << "]";
   return oss.str();
