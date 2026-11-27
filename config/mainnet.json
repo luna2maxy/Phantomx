@@ -1,0 +1,42 @@
+{
+  "network": "mainnet",
+  "display_name": "PhantomX Mainnet",
+  "symbol": "PHX",
+  "layer": "L1",
+  "address": {
+    "user_facing_prefix": "PhantomX",
+    "bech32m_hrp": "phantomx",
+    "test_vector_example": "phantomx1qqqqsyqcyq5rqwzqfpg9scrgwpugpzysnazx7fn"
+  },
+  "protocol": {
+    "version": 1,
+    "network_magic": "0x50485801",
+    "default_p2p_port": 8742,
+    "default_rpc_port": 8740,
+    "target_block_time_seconds": 60
+  },
+  "tokenomics": {
+    "decimals": 8,
+    "atom_name": "phx_atom",
+    "initial_block_reward_atoms": 2500000000,
+    "halving_interval_blocks": 2100000,
+    "theoretical_max_supply_atoms": 10500000000000000,
+    "premine_atoms": 0,
+    "subsidy_split": {
+      "poi_contributors_percent": 70,
+      "verifier_operators_percent": 20,
+      "pool_operators_percent": 10
+    }
+  },
+  "genesis": {
+    "version": 1,
+    "height": 0,
+    "timestamp": 1767225600,
+    "bits": "0x1d00ffff",
+    "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "merkle_root": "3751e9c10bd8a5297104311ac0c9338cf59e8d9cac4d2becf77cb9382ecca155",
+    "block_hash": "7b647ef05c1f23959d5560fa4eb7380d8fa2141bc9aee4ba6b2785a76122a59e",
+    "coinbase_txid": "3751e9c10bd8a5297104311ac0c9338cf59e8d9cac4d2becf77cb9382ecca155",
+    "message": "PhantomX Genesis mainnet"
+  }
+}

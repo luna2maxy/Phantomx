@@ -1,0 +1,22 @@
+[Unit]
+Description=PhantomX POI Pool API (DRAFT - verify before public exposure)
+After=network-online.target phantomxd@node-a.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=phantomx
+Group=phantomx
+EnvironmentFile=/etc/phantomx/pool.env
+WorkingDirectory=/opt/phantomx
+ExecStart=/opt/phantomx/build-ubuntu/bin/phantomx-pool --listen ${PHANTOMX_POOL_LISTEN} --api-listen ${PHANTOMX_POOL_API_LISTEN}
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/phantomx-pool /var/log/phantomx
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,101 @@
+# =========================
+# Build artifacts
+# =========================
+/build/
+/out/
+/cmake-build-*/
+build-*/
+CMakeFiles/
+CMakeCache.txt
+Testing/
+/coverage/
+compile_commands.json
+
+# Node modules
+node_modules/
+
+# =========================
+# IDE / OS
+# =========================
+/.vs/
+/.vscode/
+/.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# =========================
+# Compiled binaries/objects
+# =========================
+*.obj
+*.o
+*.pdb
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.gcda
+*.gcno
+
+# =========================
+# Secrets / sensitive data (DO NOT UPLOAD)
+# =========================
+.env
+.env.*
+*.local
+*.pem
+*.key
+*.p12
+*.pfx
+*.der
+*.crt
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+*.seed
+*.mnemonic
+*.keystore
+*.wallet.dat
+wallet.dat
+keystore.json
+rpc_cookie
+.cookie
+*.cookie
+*.secret
+secrets/
+.secrets/
+
+# Local wallet/node/datadir/runtime data
+phantomx-wallet-data/
+node_data/
+.datadir/
+.regtest*/
+*.log
+*.pid
+
+# =========================
+# Skills (local/internal, do not upload)
+# =========================
+/skills/
+
+# =========================
+# External reference repos/sources (DO NOT UPLOAD)
+# Keep analysis docs, not third-party source clones.
+# =========================
+/reference/
+/references/
+*.tar.gz
+*.zip
+*.7z
+
+# =========================
+# Local/internal docs (optional, local-only)
+# =========================
+docs/LOW_PRIORITY_BACKLOG.md
+
+
+

@@ -1,0 +1,50 @@
+{
+  "_warning": "ISOLATED TEST-ONLY BFT VALIDATION CONFIG. NOT CANONICAL TESTNET. Do not use for production or public testnet.",
+  "network": "testnet",
+  "display_name": "PhantomX Testnet BFT Validation (Isolated)",
+  "symbol": "PHX",
+  "layer": "L1",
+  "address": {
+    "user_facing_prefix": "PhantomX",
+    "bech32m_hrp": "tphx",
+    "test_vector_example": "tphx1qqqqsyqcyq5rqwzqfpg9scrgwpugpzysnwzt8ta"
+  },
+  "bft": {
+    "enabled": true,
+    "validator_count": 4,
+    "validator_voting_power": 1,
+    "validator_seed_prefix": "phantomx-testnet-bft-validation-validator-",
+    "view_change_enabled": true
+  },
+  "protocol": {
+    "version": 1,
+    "network_magic": "0x54505801",
+    "default_p2p_port": 18742,
+    "default_rpc_port": 18740,
+    "target_block_time_seconds": 60
+  },
+  "tokenomics": {
+    "decimals": 8,
+    "atom_name": "phx_atom",
+    "initial_block_reward_atoms": 2500000000,
+    "halving_interval_blocks": 2100000,
+    "theoretical_max_supply_atoms": 10500000000000000,
+    "premine_atoms": 0,
+    "subsidy_split": {
+      "poi_contributors_percent": 70,
+      "verifier_operators_percent": 20,
+      "pool_operators_percent": 10
+    }
+  },
+  "genesis": {
+    "version": 1,
+    "height": 0,
+    "timestamp": 1767225601,
+    "bits": "0x1d00ffff",
+    "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "merkle_root": "581d7e47fe4a726405e1eb3f28c8fb51828e9adbc96570e76365ba7a0bcd4711",
+    "block_hash": "98a75772b9ab585f158a1b98adace23c19bb980838c026560cc1e8f8ae165569",
+    "coinbase_txid": "581d7e47fe4a726405e1eb3f28c8fb51828e9adbc96570e76365ba7a0bcd4711",
+    "message": "PhantomX Genesis testnet"
+  }
+}

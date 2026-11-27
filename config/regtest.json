@@ -1,0 +1,49 @@
+{
+  "network": "regtest",
+  "display_name": "PhantomX Regtest",
+  "symbol": "PHX",
+  "layer": "L1",
+  "address": {
+    "user_facing_prefix": "PhantomX",
+    "bech32m_hrp": "rphx",
+    "test_vector_example": "rphx1qqqqsyqcyq5rqwzqfpg9scrgwpugpzysntw2amr"
+  },
+  "bft": {
+    "enabled": true,
+    "validator_count": 4,
+    "validator_voting_power": 1,
+    "validator_seed_prefix": "phantomx-regtest-validator-",
+    "view_change_enabled": true
+  },
+  "protocol": {
+    "version": 1,
+    "network_magic": "0x52505801",
+    "default_p2p_port": 28742,
+    "default_rpc_port": 28740,
+    "target_block_time_seconds": 1
+  },
+  "tokenomics": {
+    "decimals": 8,
+    "atom_name": "phx_atom",
+    "initial_block_reward_atoms": 2500000000,
+    "halving_interval_blocks": 2100000,
+    "theoretical_max_supply_atoms": 10500000000000000,
+    "premine_atoms": 0,
+    "subsidy_split": {
+      "poi_contributors_percent": 70,
+      "verifier_operators_percent": 20,
+      "pool_operators_percent": 10
+    }
+  },
+  "genesis": {
+    "version": 1,
+    "height": 0,
+    "timestamp": 1767225602,
+    "bits": "0x1d00ffff",
+    "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "merkle_root": "61a0774e1ad61becf01e38ed7b70600d446e9728c9da01a8ae06503d55e232bf",
+    "block_hash": "849ec5b41b3b7597c5e7e429c17826524498fb91b63c65f705a07f13477e8180",
+    "coinbase_txid": "61a0774e1ad61becf01e38ed7b70600d446e9728c9da01a8ae06503d55e232bf",
+    "message": "PhantomX Genesis regtest"
+  }
+}

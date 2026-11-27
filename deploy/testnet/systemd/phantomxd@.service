@@ -1,0 +1,36 @@
+[Unit]
+Description=PhantomX Testnet Node (%i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=phantomx
+Group=phantomx
+EnvironmentFile=/etc/phantomx/%i.env
+WorkingDirectory=/opt/phantomx
+ExecStart=/opt/phantomx/build-ubuntu/bin/phantomxd \
+  --testnet \
+  --config ${PHANTOMX_CONFIG} \
+  --datadir ${PHANTOMX_DATADIR} \
+  --rpc-host ${PHANTOMX_RPC_HOST} \
+  --rpc-port ${PHANTOMX_RPC_PORT} \
+  --p2p-host ${PHANTOMX_P2P_HOST} \
+  --p2p-port ${PHANTOMX_P2P_PORT} \
+  --node-index ${PHANTOMX_NODE_INDEX} \
+  --connect ${PHANTOMX_CONNECT} \
+  --bft-signing-key-file ${PHANTOMX_BFT_SIGNING_KEY_FILE} \
+  --rpc-token ${PHANTOMX_RPC_TOKEN} \
+  --rpc-allowip ${PHANTOMX_RPC_ALLOWIP} \
+  --log-level ${PHANTOMX_LOG_LEVEL}
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/phantomx /var/log/phantomx /opt/phantomx
+
+[Install]
+WantedBy=multi-user.target

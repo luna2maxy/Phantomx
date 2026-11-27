@@ -1,0 +1,86 @@
+{
+  "genesis_hash": {
+    "mainnet": {
+      "genesis_message": "PhantomX Genesis mainnet",
+      "coinbase_txid": "3751e9c10bd8a5297104311ac0c9338cf59e8d9cac4d2becf77cb9382ecca155",
+      "merkle_root": "3751e9c10bd8a5297104311ac0c9338cf59e8d9cac4d2becf77cb9382ecca155",
+      "block_header_hex": "010000002000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000003751e9c10bd8a5297104311ac0c9338cf59e8d9cac4d2becf77cb9382ecca15500b95569000000000000000000000000ffff001d",
+      "block_hash": "7b647ef05c1f23959d5560fa4eb7380d8fa2141bc9aee4ba6b2785a76122a59e"
+    },
+    "testnet": {
+      "genesis_message": "PhantomX Genesis testnet",
+      "coinbase_txid": "581d7e47fe4a726405e1eb3f28c8fb51828e9adbc96570e76365ba7a0bcd4711",
+      "merkle_root": "581d7e47fe4a726405e1eb3f28c8fb51828e9adbc96570e76365ba7a0bcd4711",
+      "block_header_hex": "01000000200000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000581d7e47fe4a726405e1eb3f28c8fb51828e9adbc96570e76365ba7a0bcd471101b95569000000000000000000000000ffff001d",
+      "block_hash": "98a75772b9ab585f158a1b98adace23c19bb980838c026560cc1e8f8ae165569"
+    },
+    "regtest": {
+      "genesis_message": "PhantomX Genesis regtest",
+      "coinbase_txid": "61a0774e1ad61becf01e38ed7b70600d446e9728c9da01a8ae06503d55e232bf",
+      "merkle_root": "61a0774e1ad61becf01e38ed7b70600d446e9728c9da01a8ae06503d55e232bf",
+      "block_header_hex": "0100000020000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000061a0774e1ad61becf01e38ed7b70600d446e9728c9da01a8ae06503d55e232bf02b95569000000000000000000000000ffff001d",
+      "block_hash": "849ec5b41b3b7597c5e7e429c17826524498fb91b63c65f705a07f13477e8180"
+    }
+  },
+  "merkle_root": [
+    {
+      "label": "single",
+      "tx_hashes": ["856a4921cd32690244af7568e7bd1391a94119e17c7f33234f4bf11271b223e5"],
+      "root": "856a4921cd32690244af7568e7bd1391a94119e17c7f33234f4bf11271b223e5"
+    },
+    {
+      "label": "two",
+      "tx_hashes": [
+        "856a4921cd32690244af7568e7bd1391a94119e17c7f33234f4bf11271b223e5",
+        "79043a4d1d4d6d0b830519bfc07b92b4d162a4cd54235719c2c3cc211a638dfd"
+      ],
+      "root": "89c76c3eb6cab8c3a04c759a445fc64a8e09cf8b3035be4183244a4e714ee75b"
+    },
+    {
+      "label": "three_duplicate_last",
+      "tx_hashes": [
+        "856a4921cd32690244af7568e7bd1391a94119e17c7f33234f4bf11271b223e5",
+        "79043a4d1d4d6d0b830519bfc07b92b4d162a4cd54235719c2c3cc211a638dfd",
+        "ef729c31d206229249bd791b29676d26cc7465aa6bc2003d80c7a82a316e0233"
+      ],
+      "root": "f4be66735d8fa90b4c8ba1d964cc8533cea95fa7bd273d57e32c813a4bc4d041"
+    }
+  ],
+  "serialization": [
+    {
+      "label": "sample_tx_v1",
+      "tx_hex": "010000000001000000200000000000000011111111111111111111111111111111111111111111111111111111111111111101000000030000000000000076a914ffffffff0100000000f9029500000000020000000000000088ac00000000",
+      "txid": "d93e9b453dd36421d6507b0e41c7929a617da383535dc85492d749497a93b83b"
+    }
+  ],
+  "address_encoding": [
+    {
+      "label": "mainnet_p2pkh_v0",
+      "hrp": "phantomx",
+      "version": 0,
+      "payload_hex": "000102030405060708090a0b0c0d0e0f10111213",
+      "address": "phantomx1qqqqsyqcyq5rqwzqfpg9scrgwpugpzysnazx7fn"
+    },
+    {
+      "label": "mainnet_p2sh_v1",
+      "hrp": "phantomx",
+      "version": 1,
+      "payload_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "address": "phantomx1pqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs23v9ccrydpk8qarc0swgfusy"
+    },
+    {
+      "label": "testnet_v0",
+      "hrp": "tphx",
+      "version": 0,
+      "payload_hex": "000102030405060708090a0b0c0d0e0f10111213",
+      "address": "tphx1qqqqsyqcyq5rqwzqfpg9scrgwpugpzysnwzt8ta"
+    },
+    {
+      "label": "regtest_v0",
+      "hrp": "rphx",
+      "version": 0,
+      "payload_hex": "000102030405060708090a0b0c0d0e0f10111213",
+      "address": "rphx1qqqqsyqcyq5rqwzqfpg9scrgwpugpzysntw2amr"
+    }
+  ]
+}

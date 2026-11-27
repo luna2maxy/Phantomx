@@ -1,0 +1,70 @@
+{
+  "network": "testnet",
+  "display_name": "PhantomX Testnet",
+  "symbol": "PHX",
+  "layer": "L1",
+  "address": {
+    "user_facing_prefix": "PhantomX",
+    "bech32m_hrp": "tphx",
+    "test_vector_example": "tphx1qqqqsyqcyq5rqwzqfpg9scrgwpugpzysnwzt8ta"
+  },
+  "protocol": {
+    "version": 1,
+    "network_magic": "0x54505801",
+    "default_p2p_port": 18742,
+    "default_rpc_port": 18740,
+    "target_block_time_seconds": 60
+  },
+  "tokenomics": {
+    "decimals": 8,
+    "atom_name": "phx_atom",
+    "initial_block_reward_atoms": 2500000000,
+    "halving_interval_blocks": 2100000,
+    "theoretical_max_supply_atoms": 10500000000000000,
+    "premine_atoms": 0,
+    "subsidy_split": {
+      "poi_contributors_percent": 70,
+      "verifier_operators_percent": 20,
+      "pool_operators_percent": 10
+    }
+  },
+  "genesis": {
+    "version": 1,
+    "height": 0,
+    "timestamp": 1767225601,
+    "bits": "0x1d00ffff",
+    "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "merkle_root": "581d7e47fe4a726405e1eb3f28c8fb51828e9adbc96570e76365ba7a0bcd4711",
+    "block_hash": "98a75772b9ab585f158a1b98adace23c19bb980838c026560cc1e8f8ae165569",
+    "coinbase_txid": "581d7e47fe4a726405e1eb3f28c8fb51828e9adbc96570e76365ba7a0bcd4711",
+    "message": "PhantomX Genesis testnet"
+  },
+  "bft": {
+    "enabled": true,
+    "validator_count": 4,
+    "view_change_enabled": true,
+    "key_mode": "operator",
+    "quorum_rule": "gt_2_3",
+    "validators": [
+      {
+        "pubkey": "2bd8d899bd3f9662b1e46c4b7ad5c0e61cac98c56d1a6939b8d8e37dfdae6343",
+        "voting_power": 1
+      },
+      {
+        "pubkey": "d49f722dea26012ef6fa7852418399d4430074f1018e669a07aff1cb63918dca",
+        "voting_power": 1
+      },
+      {
+        "pubkey": "19d8de75966c7a644ca4745e937b9bbab51f2149ac741374d5099a4ce79386b1",
+        "voting_power": 1
+      },
+      {
+        "pubkey": "4454470a87f019db7a0e1040441613065e6d1ec7f96d0af9ee424491095f38c0",
+        "voting_power": 1
+      }
+    ],
+    "_comment": "Canonical testnet PoI+BFT (PB-001). Operator-managed keys required. Replace validator pubkeys with operator-generated keys before any real deployment. Private keys MUST NOT be stored in this file. Two-VPS topology is at most two physical failure domains; 4 validators do not imply 4 independent physical failure domains."
+  },
+  "_canonical_status": "CANONICAL_BFT_TESTNET",
+  "_warning": "Canonical PoI+BFT testnet configuration (PB-001 approved decisions). Operator-managed keys required. Replace template validator pubkeys before any real deployment. Do not treat two VPS as four independent physical failure domains."
+}
