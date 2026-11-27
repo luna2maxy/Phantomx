@@ -9,6 +9,8 @@ Rectangle {
     property bool hasImmatureBalance: false
     property string network: "mainnet"
     property bool hideBalance: false
+    property int toggleInset: 5
+    property int toggleSize: 28
 
     implicitHeight: Theme.balanceCardHeight
     radius: Theme.balanceCardRadius
@@ -82,23 +84,9 @@ Rectangle {
                 border.color: Theme.withAlpha(Theme.error, 0.35)
                 implicitHeight: 20
                 implicitWidth: netLabel.implicitWidth + Theme.spacing12
+                // Keep clear of the top-right hide/show toggle.
+                Layout.rightMargin: root.toggleSize + root.toggleInset + Theme.spacing8 - Theme.spacing16
                 Text { id: netLabel; anchors.centerIn: parent; text: root.network; color: Theme.error; font.pixelSize: Theme.fontCaption; font.weight: Theme.weightDemi }
-            }
-
-            Item {
-                Layout.preferredWidth: toggle.implicitWidth + 10
-                Layout.preferredHeight: toggle.implicitHeight
-
-                IconButton {
-                    id: toggle
-                    anchors.right: parent.right
-                    anchors.rightMargin: 10
-                    anchors.top: parent.top
-                    anchors.topMargin: -10
-                    iconText: root.hideBalance ? "◌" : "●"
-                    tooltipText: root.hideBalance ? qsTr("Show balance") : qsTr("Hide balance")
-                    onClicked: root.hideBalance = !root.hideBalance
-                }
             }
         }
 
@@ -152,5 +140,18 @@ Rectangle {
         }
 
         Item { Layout.fillHeight: true }
+    }
+
+    IconButton {
+        id: toggle
+        anchors.top: parent.top
+        anchors.topMargin: root.toggleInset
+        anchors.right: parent.right
+        anchors.rightMargin: root.toggleInset
+        width: root.toggleSize
+        height: root.toggleSize
+        iconText: root.hideBalance ? "◌" : "●"
+        tooltipText: root.hideBalance ? qsTr("Show balance") : qsTr("Hide balance")
+        onClicked: root.hideBalance = !root.hideBalance
     }
 }

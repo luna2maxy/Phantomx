@@ -15,6 +15,23 @@ Entry format (always write entries in **English** — see `docs/DEVELOPMENT.md`)
 
 ---
 
+## 2026-11-27 — Anchor Qt wallet hide/show balance toggle to card top-right
+
+- **Time (UTC):** 2026-11-27T13:53:07Z
+- **Action:**
+  - Replaced the previous row-offset placement with an absolute top-right placement inside the balance card: 5px from the top edge and 5px from the right edge.
+  - Removed the toggle from the `RowLayout` and anchored it directly to the `BalanceCard` root.
+  - Reserved horizontal space for the network badge so it does not overlap the new toggle position.
+  - This supersedes the earlier 10px left/up offset entry.
+- **Reason/Request:** User: "Put it inside the balance card at the top-right corner with a 5px margin from the edge."
+- **Files changed:** `apps/phantomx-qt/qml/components/BalanceCard.qml`, `docs/CHANGELOG_ACTIONS.md`.
+- **Verification:**
+  - `cmake --build build --target phantomx-qt -j$(nproc)` → success; `BalanceCard.qml` was recompiled into the Qt resource and QML cache.
+  - `qmllint` → no syntax errors.
+  - `QT_QPA_PLATFORM=offscreen timeout 5 ./build/bin/phantomx-qt` → no QML/runtime errors in output (exit `124` is the expected timeout for the long-running GUI).
+  - `ctest --test-dir build --output-on-failure -j4` → **11/11 passed**.
+  - `git diff --check` → clean.
+
 ## 2026-11-27 — Shift Qt wallet hide/show balance toggle
 
 - **Time (UTC):** 2026-11-27T13:51:23Z
