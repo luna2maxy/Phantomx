@@ -1,4 +1,6 @@
-# Monitoring (DRAFT)
+# Monitoring
+
+**Status: ACTIVE on the deployed testnet (owner-authorized TESTNET GO, 2026-11-27).** Evidence: 56 samples, 0 critical, 0 warning (`docs/reports/PHANTOMX_TESTNET_READINESS_EXECUTION_REPORT.md`, section Y). Public exposure remains NOT AUTHORIZED.
 
 ## Required checks
 - Node process up (systemd), RPC responsive on localhost, P2P peer count > 0, chain height advancing or synced.

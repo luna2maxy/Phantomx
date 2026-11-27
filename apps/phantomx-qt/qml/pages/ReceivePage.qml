@@ -14,7 +14,7 @@ Item {
 
         Text {
             Layout.fillWidth: true
-            text: qsTr("1 keystore dapat memiliki banyak address. Treasury adalah address utama penerimaan.")
+            text: qsTr("A single keystore can contain multiple addresses. The treasury is the primary receiving address.")
             color: Theme.textMuted
             font.pixelSize: Theme.fontCaption
             wrapMode: Text.WordWrap

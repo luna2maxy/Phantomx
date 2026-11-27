@@ -41,7 +41,7 @@ Item {
                 visible: page.nodeOffline
                 tone: "warning"
                 text: page.nodeOffline ? qsTr("Node offline, data not available. Showing local data if available.") : ""
-                actionText: qsTr("Coba lagi")
+                actionText: qsTr("Try Again")
                 onActionClicked: if (walletBridge) walletBridge.refresh()
             }
 
@@ -105,25 +105,25 @@ Item {
                 compact: true
 
                 Text { text: qsTr("Status"); color: Theme.text; font.pixelSize: Theme.fontSubtitle; font.weight: Theme.weightBold }
-                Text { text: qsTr("Koneksi"); color: Theme.textMuted; font.pixelSize: Theme.fontCaption; font.weight: Theme.weightDemi }
+                Text { text: qsTr("Connection"); color: Theme.textMuted; font.pixelSize: Theme.fontCaption; font.weight: Theme.weightDemi }
                 Repeater {
-                    model: page.rowsFor("Koneksi")
+                    model: page.rowsFor("Connection")
                     delegate: StatusRow { Layout.fillWidth: true; label: modelData.label; value: modelData.value; badge: modelData.badge || ""; badgeTone: modelData.badgeTone || "muted"; dimmed: page.nodeOffline && modelData.value === "—" }
                 }
 
                 Rectangle { Layout.fillWidth: true; height: Theme.borderWidth; color: Theme.dividerColor }
 
-                Text { text: qsTr("Performa"); color: Theme.textMuted; font.pixelSize: Theme.fontCaption; font.weight: Theme.weightDemi }
+                Text { text: qsTr("Performance"); color: Theme.textMuted; font.pixelSize: Theme.fontCaption; font.weight: Theme.weightDemi }
                 Repeater {
-                    model: page.rowsFor("Performa")
+                    model: page.rowsFor("Performance")
                     delegate: StatusRow { Layout.fillWidth: true; label: modelData.label; value: modelData.value; badge: modelData.badge || ""; badgeTone: modelData.badgeTone || "muted"; dimmed: page.nodeOffline && modelData.value === "—" }
                 }
 
                 Rectangle { Layout.fillWidth: true; height: Theme.borderWidth; color: Theme.dividerColor }
 
-                Text { text: qsTr("Konfigurasi"); color: Theme.textMuted; font.pixelSize: Theme.fontCaption; font.weight: Theme.weightDemi }
+                Text { text: qsTr("Configuration"); color: Theme.textMuted; font.pixelSize: Theme.fontCaption; font.weight: Theme.weightDemi }
                 Repeater {
-                    model: page.rowsFor("Konfigurasi")
+                    model: page.rowsFor("Configuration")
                     delegate: StatusRow { Layout.fillWidth: true; label: modelData.label; value: modelData.value; badge: modelData.badge || ""; badgeTone: modelData.badgeTone || "muted"; dimmed: false }
                 }
             }

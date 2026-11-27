@@ -277,7 +277,7 @@ QWidget* MainWindow::buildOverviewPage() {
   connect(copyAddrCardBtn, &QPushButton::clicked, this, [this]() {
     if (!service_->hasWallet()) { setStatusMessage("No wallet loaded.", true); return; }
     QApplication::clipboard()->setText(service_->address());
-    setStatusMessage("Address disalin.");
+    setStatusMessage("Address copied.");
   });
   return page;
 }
@@ -997,7 +997,7 @@ void MainWindow::refreshPoi() {
                service_->nodeOnline() ? "online" : "offline",
                service_->nodeOnline() ? QString::number(service_->connectionCount()) : "Not Available",
                latMs, sLat, relRatio, sRel, sBw, sNet));
-  poiBackendLabel_->setText(st.value("backend_note").toString() + "\nRumus: epoch=max(1,ceil(active_miners/10)); score=100*(0.35*bw+0.25*lat+0.25*relay+0.15*miners), komponen NA direweight; T_find=clamp(60000/(F_score*F_epoch),15000,300000).");
+  poiBackendLabel_->setText(st.value("backend_note").toString() + "\nFormula: epoch=max(1,ceil(active_miners/10)); score=100*(0.35*bw+0.25*lat+0.25*relay+0.15*miners); NA components are reweighted; T_find=clamp(60000/(F_score*F_epoch),15000,300000).");
 }
 
 void MainWindow::setStatusMessage(const QString& text, bool isError) {

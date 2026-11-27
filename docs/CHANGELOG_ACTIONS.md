@@ -15,6 +15,29 @@ Entry format (always write entries in **English** — see `docs/DEVELOPMENT.md`)
 
 ---
 
+## 2026-11-27 — Update executed testnet status and finish Qt English UI audit
+
+- **Time (UTC):** 2026-11-27T14:22:47Z
+- **Action:**
+  - Updated `deploy/testnet/README.md` from `DRAFT / NOT VERIFIED` to `DEPLOYED AND TESTNET GO AUTHORIZED (owner, 2026-11-27)`, with the executed-evidence summary and owner-accepted residual gaps from `docs/reports/PHANTOMX_TESTNET_READINESS_EXECUTION_REPORT.md` section Y. Public exposure remains NOT AUTHORIZED.
+  - Updated `deploy/testnet/monitoring/README.md` from draft to `ACTIVE`, recording 56 samples with 0 critical and 0 warning alerts.
+  - Translated the remaining Indonesian user-facing Qt strings into English:
+    - PoI status section headers: `Connection`, `Performance`, `Configuration`. The matching `rowsFor()` keys were changed to the same English group names already emitted by `WalletBridge`, so these sections now display their existing rows.
+    - Receive page note: "A single keystore can contain multiple addresses. The treasury is the primary receiving address."
+    - MainWindow copy status: "Address copied."
+    - PoI backend note formula text: "Formula: ... NA components are reweighted; ..."
+  - Kept the already-present `Try Again` translation in `PoiPage.qml` and included it in this commit.
+  - No wallet logic, RPC, consensus, mining, staking, keystore, or transaction code was changed; only displayed strings and documentation status were updated.
+- **Reason/Request:** User: "The deploy README draft status was already executed by me but the text was never changed, and the Qt wallet still contains Indonesian text. Please change it to English."
+- **Files changed:** `deploy/testnet/README.md`, `deploy/testnet/monitoring/README.md`, `apps/phantomx-qt/qml/pages/PoiPage.qml`, `apps/phantomx-qt/qml/pages/ReceivePage.qml`, `apps/phantomx-qt/MainWindow.cpp`, `docs/CHANGELOG_ACTIONS.md`.
+- **Verification:**
+  - `cmake --build build -j$(nproc)` → success; `MainWindow.cpp`, `PoiPage.qml`, and `ReceivePage.qml` were rebuilt into `phantomx-qt`.
+  - `qmllint` on `PoiPage.qml` and `ReceivePage.qml` → no syntax errors.
+  - `QT_QPA_PLATFORM=offscreen timeout 5 ./build/bin/phantomx-qt` → no QML/runtime errors (exit `124` is the expected timeout for the long-running GUI).
+  - `ctest --test-dir build --output-on-failure -j4` → **11/11 passed**.
+  - `git diff --check` → clean.
+  - Indonesian-token audit across `apps/phantomx-qt` QML/C++ sources → no remaining Indonesian UI tokens found.
+
 ## 2026-11-27 — Integrate real immature balance into Qt Overview and reposition hide toggle
 
 - **Time (UTC):** 2026-11-27T14:14:47Z
