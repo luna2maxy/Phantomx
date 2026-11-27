@@ -148,17 +148,23 @@ void P2PNode::stop() {
 #endif
     close_socket(p->fd);
   }
-  if (accept_thread_.joinable()) accept_thread_.join();
-  if (maintenance_thread_.joinable()) maintenance_thread_.join();
-  for (auto& p : to_close) {
-    if (p->thread.joinable()) p->thread.join();
-  }
+  auto safe_join = [](std::thread& t) {
+    if (!t.joinable()) return;
+    try {
+      t.join();
+    } catch (const std::system_error&) {
+      // Best-effort join on shutdown; avoid crashing tests on platform-specific thread state races.
+    }
+  };
+  safe_join(accept_thread_);
+  safe_join(maintenance_thread_);
+  for (auto& p : to_close) safe_join(p->thread);
   std::vector<std::thread> zombies;
   {
     std::scoped_lock lock(mu_);
     zombies.swap(zombie_threads_);
   }
-  for (auto& t : zombies) if (t.joinable()) t.join();
+  for (auto& t : zombies) safe_join(t);
   std::scoped_lock lock(mu_);
   peers_.clear();
 }
