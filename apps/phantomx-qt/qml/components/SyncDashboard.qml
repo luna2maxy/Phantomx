@@ -1,11 +1,12 @@
 import QtQuick 2.15
+import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import PhantomXWallet 1.0
 
 Rectangle {
     id: root
     color: "transparent"
-    implicitHeight: dashColumn.implicitHeight
+    implicitHeight: walletSection.implicitHeight + nodeSection.implicitHeight + Theme.spacing8
 
     property bool walletExpanded: false
     property bool nodeExpanded: false
@@ -114,6 +115,17 @@ Rectangle {
         clip: true
         boundsBehavior: Flickable.StopAtBounds
 
+        ScrollBar.vertical: ScrollBar {
+            width: 4
+            rightPadding: 0
+            leftPadding: 0
+            policy: ScrollBar.AsNeeded
+            contentItem: Rectangle {
+                radius: 2
+                color: Theme.withAlpha(Theme.accent, 0.55)
+            }
+        }
+
         ColumnLayout {
             id: dashColumn
             width: parent.width
@@ -139,7 +151,10 @@ Rectangle {
                 progressValue: walletBridge ? walletBridge.walletSyncProgress : 0
                 progressValid: root.walletState().valid
                 expanded: root.walletExpanded
-                onToggleExpanded: root.walletExpanded = !root.walletExpanded
+                onToggleExpanded: {
+                    root.walletExpanded = !root.walletExpanded
+                    if (root.walletExpanded) root.nodeExpanded = false
+                }
                 metrics: {
                     const live = walletBridge && walletBridge.online
                     const indexed = walletBridge ? walletBridge.walletScanHeight : 0
@@ -181,7 +196,10 @@ Rectangle {
                 progressValid: root.nodeState().valid
                 progressLabel: qsTr("Blockchain sync")
                 expanded: root.nodeExpanded
-                onToggleExpanded: root.nodeExpanded = !root.nodeExpanded
+                onToggleExpanded: {
+                    root.nodeExpanded = !root.nodeExpanded
+                    if (root.nodeExpanded) root.walletExpanded = false
+                }
                 metrics: {
                     const live = walletBridge && walletBridge.online
                     const current = walletBridge ? walletBridge.nodeHeight : 0

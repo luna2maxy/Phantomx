@@ -75,8 +75,9 @@ Rectangle {
 
         Item {
             Layout.fillWidth: true
+            Layout.topMargin: -10
             Layout.preferredHeight: syncDashboard.implicitHeight
-            Layout.maximumHeight: Math.max(120, root.height * 0.42)
+            Layout.maximumHeight: Math.max(130, root.height * 0.42 + 10)
             clip: true
 
             SyncDashboard {

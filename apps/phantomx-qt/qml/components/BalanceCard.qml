@@ -42,18 +42,6 @@ Rectangle {
     }
     function unitPart() { return root.hideBalance ? "" : "PHX" }
 
-    // Subtle motif inside card
-    Text {
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.rightMargin: Theme.spacing12
-        anchors.bottomMargin: -Theme.spacing8
-        text: "X"
-        color: Theme.withAlpha(Theme.text, 0.07)
-        font.pixelSize: Theme.fontMotif
-        font.weight: Theme.weightBold
-    }
-
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: Theme.spacing16
@@ -112,7 +100,7 @@ Rectangle {
             spacing: Theme.spacing4
 
             Text {
-                Layout.maximumWidth: root.width * 0.45
+                Layout.maximumWidth: root.width * 0.55
                 text: root.wholePart()
                 color: Theme.text
                 font.pixelSize: Theme.fontBalance

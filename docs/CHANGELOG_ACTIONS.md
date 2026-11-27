@@ -15,6 +15,24 @@ Entry format (always write entries in **English** — see `docs/DEVELOPMENT.md`)
 
 ---
 
+## 2026-11-27 — Lift sync dashboard and tidy balance card
+
+- **Time (UTC):** 2026-11-27T14:49:18Z
+- **Action:**
+  - Raised the Wallet Sync / Node Sync dashboard block by 10px in the sidebar (`Layout.topMargin: -10`) and increased its maximum height by the same amount, so an expanded section has more readable space before the bottom edge.
+  - Made the dashboard an accordion: expanding one section collapses the other, preventing two expanded detail lists from pushing content below the sidebar.
+  - Compressed sync detail spacing from 6px to 4px and margins from 8px to 6px, and added a thin on-demand scrollbar for the rare case where the window is too short to show all details.
+  - Replaced the derived `dashColumn.implicitHeight` binding with the explicit sum of both section heights plus spacing, so the sidebar reserves the correct height immediately when a section expands.
+  - Tidied `BalanceCard.qml`: removed the oversized `X` motif that bled past the card edge, widened the main balance value allowance from 45% to 55%, and kept the small orange local `X` mark as the only wallet identity mark in the card. The splash screen remains the sole consumer of `logo.png`.
+- **Reason/Request:** User reported that clicking either sync section could push details down or make them unreadable, asked to raise the sections by 10px, and asked for a cleaner balance card.
+- **Files changed:** `apps/phantomx-qt/qml/shell/Sidebar.qml`, `apps/phantomx-qt/qml/components/SyncDashboard.qml`, `apps/phantomx-qt/qml/components/SyncSection.qml`, `apps/phantomx-qt/qml/components/BalanceCard.qml`, `docs/CHANGELOG_ACTIONS.md`.
+- **Verification:**
+  - `cmake --build build -j$(nproc)` → success.
+  - `qmllint` on the four changed QML files → no syntax/type errors.
+  - `QT_QPA_PLATFORM=offscreen timeout 5 ./build/bin/phantomx-qt` → no QML/runtime errors (exit `124` is the expected timeout for the long-running GUI).
+  - `ctest --test-dir build --output-on-failure -j4` → **11/11 passed**.
+  - `git diff --check` → clean.
+
 ## 2026-11-27 — Add real synchronization dashboard to Qt sidebar and reserve logo for splash
 
 - **Time (UTC):** 2026-11-27T14:43:49Z

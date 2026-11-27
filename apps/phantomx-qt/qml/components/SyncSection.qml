@@ -147,8 +147,8 @@ Rectangle {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.margins: Theme.spacing8
-            spacing: 6
+            anchors.margins: 6
+            spacing: 4
 
             Rectangle {
                 Layout.fillWidth: true
