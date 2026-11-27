@@ -17,6 +17,7 @@ class WalletBridge final : public QObject {
   Q_PROPERTY(int chainHeight READ chainHeight NOTIFY stateChanged)
   Q_PROPERTY(int headerHeight READ headerHeight NOTIFY stateChanged)
   Q_PROPERTY(int connectionCount READ connectionCount NOTIFY stateChanged)
+  Q_PROPERTY(bool hideBalance READ hideBalance WRITE setHideBalance NOTIFY hideBalanceChanged)
   Q_PROPERTY(QString balanceDisplay READ balanceDisplay NOTIFY stateChanged)
   Q_PROPERTY(QString spendableBalanceDisplay READ spendableBalanceDisplay NOTIFY stateChanged)
   Q_PROPERTY(QString immatureBalanceDisplay READ immatureBalanceDisplay NOTIFY stateChanged)
@@ -57,6 +58,8 @@ class WalletBridge final : public QObject {
   int chainHeight() const;
   int headerHeight() const;
   int connectionCount() const;
+  bool hideBalance() const;
+  Q_INVOKABLE void setHideBalance(bool hide);
   QString balanceDisplay() const;
   QString spendableBalanceDisplay() const;
   QString immatureBalanceDisplay() const;
@@ -107,6 +110,7 @@ class WalletBridge final : public QObject {
 
  signals:
   void stateChanged();
+  void hideBalanceChanged();
   void poiChanged();
   void message(const QString& text, bool isError);
 
@@ -116,4 +120,5 @@ class WalletBridge final : public QObject {
 
   WalletService* service_ = nullptr;
   QVariantMap poiStatus_;
+  bool hideBalance_ = false;
 };

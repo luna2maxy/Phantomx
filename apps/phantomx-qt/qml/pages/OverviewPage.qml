@@ -45,7 +45,10 @@ Item {
 
                     Text {
                         Layout.fillWidth: true
-                        text: qsTr("Balance: %1").arg(walletBridge ? walletBridge.balanceDisplay : "—")
+                        text: {
+                            if (!walletBridge) return qsTr("Balance: —")
+                            return walletBridge.hideBalance ? qsTr("Balance: •••• PHX") : qsTr("Balance: %1").arg(walletBridge.balanceDisplay)
+                        }
                         color: Theme.text
                         font.pixelSize: Theme.fontSubtitle
                         font.weight: Theme.weightBold
@@ -55,7 +58,10 @@ Item {
                     Text {
                         Layout.fillWidth: true
                         visible: walletBridge ? (walletBridge.online || walletBridge.hasImmatureBalance) : false
-                        text: qsTr("Immature: %1").arg(walletBridge ? walletBridge.immatureBalanceDisplay : "—")
+                        text: {
+                            if (!walletBridge) return qsTr("Immature Balance: —")
+                            return walletBridge.hideBalance ? qsTr("Immature Balance: •••• PHX") : qsTr("Immature Balance: %1").arg(walletBridge.immatureBalanceDisplay)
+                        }
                         color: Theme.textMuted
                         font.pixelSize: Theme.fontBody
                         wrapMode: Text.WordWrap

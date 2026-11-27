@@ -15,6 +15,27 @@ Entry format (always write entries in **English** — see `docs/DEVELOPMENT.md`)
 
 ---
 
+## 2026-11-27 — Integrate real immature balance into Qt Overview and reposition hide toggle
+
+- **Time (UTC):** 2026-11-27T14:14:47Z
+- **Action:**
+  - Verified the backend already exposes maturity data: `balance_for_pub()` in `src/rpc/node_handlers.cpp:513` splits UTXOs into `spendable` and `immature` using `kCoinbaseMaturity`; `getbalance` returns `spendable_atoms` and `immature_atoms` (`src/rpc/node_handlers.cpp:715-724`). No new consensus/mining/staking or balance calculation was added.
+  - `WalletService::refreshNodeStatus()` already aggregates both fields for every account and emits `rpcStatusChanged()` / `walletChanged()`; `main.cpp` polls `WalletBridge::refresh()` every 15s and once at startup, so Qt values follow synchronization.
+  - Changed `WalletBridge::balanceDisplay()` to present the spendable (available) amount, while `immatureBalanceDisplay()` continues to present the separate node-reported immature amount in the same PHX atom format.
+  - Updated Overview to show, in order: **Balance**, **Immature Balance**, **Address**, **Copy Address**. The immature label now reads `Immature Balance: <amount> PHX`.
+  - Lifted the hide/show state into `WalletBridge` (`hideBalance`, `setHideBalance`, `hideBalanceChanged`) so the sidebar toggle masks both the sidebar card and the Overview balance lines. `BalanceCard` now emits `toggleHideBalance()` and `Sidebar.qml` forwards it to the bridge.
+  - Moved the sidebar toggle **6px up and 4px right** from its previous `3px/3px` inset: `toggleTopInset: -3`, `toggleRightInset: -1`. The network badge margin was recomputed from `toggleRightInset` so the testnet label still keeps a full `Theme.spacing16` gap and cannot overlap at any window size.
+  - No transaction, send/receive, RPC, keystore, or synchronization logic was changed.
+- **Reason/Request:** User: "Add real Immature Balance to the Qt Overview from the existing blockchain backend, show Balance / Immature Balance / Address / Copy Address, move Show/Hide Balance 6px up and 4px right, and keep the testnet label clear."
+- **Files changed:** `apps/phantomx-qt/WalletBridge.hpp`, `apps/phantomx-qt/WalletBridge.cpp`, `apps/phantomx-qt/qml/components/BalanceCard.qml`, `apps/phantomx-qt/qml/shell/Sidebar.qml`, `apps/phantomx-qt/qml/pages/OverviewPage.qml`, `docs/DESKTOP_WALLET.md`, `docs/CHANGELOG_ACTIONS.md`.
+- **Verification:**
+  - `cmake --build build -j$(nproc)` → success (including `phantomx-qt`).
+  - `qmllint` on `OverviewPage.qml`, `BalanceCard.qml`, and `Sidebar.qml` → no syntax errors.
+  - `QT_QPA_PLATFORM=offscreen timeout 5 ./build/bin/phantomx-qt` → no QML/runtime errors (exit `124` is the expected timeout for the long-running GUI).
+  - `ctest --test-dir build --output-on-failure -j4` → **11/11 passed**.
+  - `git diff --check` → clean.
+  - Backend evidence: `getbalance` already returns `spendable_atoms` / `immature_atoms`; Qt reads both in `WalletService::refreshNodeStatus()` and formats them with the same `atomsToPhx()` helper used for Balance.
+
 ## 2026-11-27 — Widen Qt wallet Settings content area
 
 - **Time (UTC):** 2026-11-27T14:08:35Z

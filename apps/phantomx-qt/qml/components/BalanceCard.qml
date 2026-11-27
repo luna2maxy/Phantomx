@@ -9,9 +9,12 @@ Rectangle {
     property bool hasImmatureBalance: false
     property string network: "mainnet"
     property bool hideBalance: false
-    property int toggleInset: 3
+    property int toggleTopInset: -3
+    property int toggleRightInset: -1
     property int toggleSize: 28
     property int toggleGap: Theme.spacing16
+
+    signal toggleHideBalance()
 
     implicitHeight: Theme.balanceCardHeight
     radius: Theme.balanceCardRadius
@@ -86,7 +89,7 @@ Rectangle {
                 implicitHeight: 20
                 implicitWidth: netLabel.implicitWidth + Theme.spacing12
                 // Reserve a full-spacing gap before the top-right hide/show toggle.
-                Layout.rightMargin: root.toggleSize + root.toggleInset + root.toggleGap - Theme.spacing16
+                Layout.rightMargin: root.toggleSize + root.toggleRightInset + root.toggleGap - Theme.spacing16
                 Text { id: netLabel; anchors.centerIn: parent; text: root.network; color: Theme.error; font.pixelSize: Theme.fontCaption; font.weight: Theme.weightDemi }
             }
         }
@@ -147,13 +150,13 @@ Rectangle {
         id: toggle
         z: 2
         anchors.top: parent.top
-        anchors.topMargin: root.toggleInset
+        anchors.topMargin: root.toggleTopInset
         anchors.right: parent.right
-        anchors.rightMargin: root.toggleInset
+        anchors.rightMargin: root.toggleRightInset
         width: root.toggleSize
         height: root.toggleSize
         iconText: root.hideBalance ? "◌" : "●"
         tooltipText: root.hideBalance ? qsTr("Show balance") : qsTr("Hide balance")
-        onClicked: root.hideBalance = !root.hideBalance
+        onClicked: root.toggleHideBalance()
     }
 }

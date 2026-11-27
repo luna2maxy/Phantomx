@@ -44,9 +44,19 @@ int WalletBridge::chainHeight() const { return service_ ? static_cast<int>(servi
 int WalletBridge::headerHeight() const { return service_ ? static_cast<int>(service_->headerHeight()) : 0; }
 int WalletBridge::connectionCount() const { return service_ ? static_cast<int>(service_->connectionCount()) : 0; }
 
+bool WalletBridge::hideBalance() const { return hideBalance_; }
+
+void WalletBridge::setHideBalance(bool hide) {
+  if (hideBalance_ == hide) return;
+  hideBalance_ = hide;
+  emit hideBalanceChanged();
+}
+
 QString WalletBridge::balanceDisplay() const {
   if (!service_) return QStringLiteral("—");
-  if (service_->nodeOnline() || service_->usingLocalData()) return atomsToPhx(service_->balanceAtoms());
+  // "Balance" in the UI is the spendable (available) amount. Immature coinbase
+  // outputs are reported separately and are never spendable.
+  if (service_->nodeOnline() || service_->usingLocalData()) return atomsToPhx(service_->spendableBalanceAtoms());
   return QStringLiteral("—");
 }
 

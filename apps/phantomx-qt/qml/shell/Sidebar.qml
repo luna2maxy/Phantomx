@@ -29,7 +29,9 @@ Rectangle {
             balanceDisplay: walletBridge ? walletBridge.balanceDisplay : "—"
             immatureBalanceDisplay: walletBridge ? walletBridge.immatureBalanceDisplay : "—"
             hasImmatureBalance: walletBridge ? walletBridge.hasImmatureBalance : false
+            hideBalance: walletBridge ? walletBridge.hideBalance : false
             network: walletBridge ? walletBridge.network : ""
+            onToggleHideBalance: if (walletBridge) walletBridge.setHideBalance(!walletBridge.hideBalance)
         }
 
         Item { Layout.preferredHeight: Theme.spacing4 }

@@ -25,8 +25,9 @@ Binary: `build-ubuntu/bin/phantomx-qt`
 |---|---|---|
 | Default wallet/address | Implemented | If no keystore exists, a default local wallet is created automatically. UI shows a backup warning banner. |
 | Create/Open/Import/Backup | Implemented | Create/load use the local keystore. Import opens a native file browser to select a keystore file (not a secret-key string); Backup opens a native save dialog to write the keystore into the file manager. Secret keys stay local and are never sent to RPC/server. |
-| Balance | Implemented | From real wallet/node RPC; shows `Not Available` when node is offline. |
-| Immature balance | Implemented | Overview shows the node-reported `immature_atoms` from `getbalance` as `Immature: <amount> PHX`, including `0 PHX` when the node is online. When only local fallback data is available, maturity cannot be determined, so the line is hidden unless a non-zero value is known. |
+| Balance | Implemented | Shows the spendable (available) amount from node RPC `spendable_atoms`, formatted in PHX. Immature coinbase outputs are excluded. Shows `—` when neither node nor local data is available. |
+| Immature balance | Implemented | Overview shows the node-reported `immature_atoms` from `getbalance` as `Immature Balance: <amount> PHX`, including `0 PHX` when the node is online. When only local fallback data is available, maturity cannot be determined, so the line is hidden unless a non-zero value is known. |
+| Hide/show balance | Implemented | The sidebar toggle masks both the sidebar balance card and the Overview Balance / Immature Balance lines. |
 | Send | Implemented (basic) | Presets Fast (2 conf) / Normal (6 conf, default) / Slow (12 conf) with different fees; tx sent via wallet core/node RPC. |
 | Receive | Implemented | Single keystore can generate many addresses. Copy + popup after generation. |
 | Transactions/UTXOs | Implemented (basic) | From `wallet.history()`/UTXO RPC; `Not Available` when offline. |
@@ -41,7 +42,7 @@ Binary: `build-ubuntu/bin/phantomx-qt`
 
 ## UI layout
 
-- **Overview**: balance (including node-reported immature balance), treasury address, block height, connected peers (node), sync blocks/headers, progress, ETA. Compact sync also shown in bottom-left status bar (`Synced` when complete).
+- **Overview**: Balance (spendable), Immature Balance (node-reported immature coinbase outputs), Address, Copy Address, block height, connected peers (node), sync blocks/headers, progress, ETA. Compact sync also shown in bottom-left status bar (`Synced` when complete).
 - **Send**: send PHX with Fast/Normal/Slow presets (2/6/12 conf targets), different fees.
 - **Receive**: treasury address, Generate New Address, Generate 5 Addresses (one keystore, many addresses).
 - **Transactions**: transaction/UTXO table.
