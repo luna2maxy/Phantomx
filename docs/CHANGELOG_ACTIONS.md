@@ -15,6 +15,25 @@ Entry format (always write entries in **English** — see `docs/DEVELOPMENT.md`)
 
 ---
 
+## 2026-11-27 — Refine Qt wallet Settings layout and balance-card spacing
+
+- **Time (UTC):** 2026-11-27T14:04:50Z
+- **Action:**
+  - Rebuilt the Settings page layout around a centered, max-width (720px) content column that vertically centers when it fits and falls back to top alignment on short viewports.
+  - Replaced wide Import/Backup controls with compact `size: "S"` buttons placed immediately to the right of their labels; the Toggle/Create/Open/Apply buttons remain aligned consistently.
+  - Made the label column width responsive (`min(Theme.formLabelWidth, max(96, 34% of content width))`) so rows stay aligned on narrow screens.
+  - Added consistent control heights for text inputs and preserved the existing dark theme, orange accent, radii, and all existing invocations.
+  - In `BalanceCard.qml`, reserved a full `Theme.spacing16` gap between the hide/show toggle and the network badge, and raised the toggle above card content with `z: 2` to prevent overlap at any card width.
+  - No wallet logic, transaction flow, keystore import/backup behavior, or node connection code was changed.
+- **Reason/Request:** User: "Tidy and perfect the PhantomX Wallet Settings UI without changing function, logic, or working features. Center the content, make Import/Backup buttons compact, and stop the Show/Hide Balance button from overlapping the testnet label."
+- **Files changed:** `apps/phantomx-qt/qml/pages/SettingsPage.qml`, `apps/phantomx-qt/qml/components/BalanceCard.qml`, `docs/CHANGELOG_ACTIONS.md`.
+- **Verification:**
+  - `cmake --build build --target phantomx-qt -j$(nproc)` → success; both QML files were recompiled into the Qt resource and QML cache.
+  - `qmllint` on both changed QML files → no syntax errors.
+  - `QT_QPA_PLATFORM=offscreen timeout 5 ./build/bin/phantomx-qt` → no QML/runtime errors in output (exit `124` is the expected timeout for the long-running GUI).
+  - `ctest --test-dir build --output-on-failure -j4` → **11/11 passed**.
+  - `git diff --check` → clean.
+
 ## 2026-11-27 — File-browser keystore import/backup and finer toggle offset
 
 - **Time (UTC):** 2026-11-27T13:57:39Z

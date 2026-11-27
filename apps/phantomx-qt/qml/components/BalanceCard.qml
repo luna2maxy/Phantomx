@@ -11,6 +11,7 @@ Rectangle {
     property bool hideBalance: false
     property int toggleInset: 3
     property int toggleSize: 28
+    property int toggleGap: Theme.spacing16
 
     implicitHeight: Theme.balanceCardHeight
     radius: Theme.balanceCardRadius
@@ -84,8 +85,8 @@ Rectangle {
                 border.color: Theme.withAlpha(Theme.error, 0.35)
                 implicitHeight: 20
                 implicitWidth: netLabel.implicitWidth + Theme.spacing12
-                // Keep clear of the top-right hide/show toggle.
-                Layout.rightMargin: root.toggleSize + root.toggleInset + Theme.spacing8 - Theme.spacing16
+                // Reserve a full-spacing gap before the top-right hide/show toggle.
+                Layout.rightMargin: root.toggleSize + root.toggleInset + root.toggleGap - Theme.spacing16
                 Text { id: netLabel; anchors.centerIn: parent; text: root.network; color: Theme.error; font.pixelSize: Theme.fontCaption; font.weight: Theme.weightDemi }
             }
         }
@@ -144,6 +145,7 @@ Rectangle {
 
     IconButton {
         id: toggle
+        z: 2
         anchors.top: parent.top
         anchors.topMargin: root.toggleInset
         anchors.right: parent.right

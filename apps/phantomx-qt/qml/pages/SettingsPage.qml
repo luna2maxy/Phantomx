@@ -10,106 +10,121 @@ Item {
     Flickable {
         anchors.fill: parent
         contentWidth: width
-        contentHeight: col.implicitHeight + Theme.pageMargin * 2
+        contentHeight: Math.max(parent.height, content.implicitHeight + Theme.pageMargin * 2)
         clip: true
         boundsBehavior: Flickable.StopAtBounds
         ScrollBar.vertical: StyledScrollBar { }
 
-        ColumnLayout {
-            id: col
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.leftMargin: Theme.pageMargin
-            anchors.rightMargin: Theme.pageMargin
-            anchors.topMargin: Theme.pageMargin
-            spacing: Theme.spacing24
+        Item {
+            id: content
+            width: Math.max(1, Math.min(parent.width - Theme.pageMargin * 2, 720))
+            implicitHeight: mainCol.implicitHeight
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: Math.max(Theme.pageMargin, (parent.height - implicitHeight) / 2)
+
+            property int labelWidth: Math.min(Theme.formLabelWidth, Math.max(96, width * 0.34))
 
             ColumnLayout {
-                Layout.fillWidth: true
-                spacing: Theme.spacing12
+                id: mainCol
+                width: parent.width
+                spacing: Theme.spacing24
 
-                SectionHeader { text: qsTr("Wallet Management") }
-
-                Text {
-                    Layout.fillWidth: true
-                    text: qsTr("Keystore: %1").arg(walletBridge ? walletBridge.keystorePath : "—")
-                    color: Theme.textMuted
-                    font.pixelSize: Theme.fontCaption
-                    wrapMode: Text.WrapAnywhere
-                }
-
-                Flow {
+                ColumnLayout {
                     Layout.fillWidth: true
                     spacing: Theme.spacing12
-                    AppButton { text: qsTr("Create New Wallet"); variant: "primary"; size: "M"; onClicked: if (walletBridge) walletBridge.createWallet() }
-                    AppButton { text: qsTr("Open/Load Wallet"); variant: "secondary"; size: "M"; onClicked: if (walletBridge) walletBridge.loadWallet() }
-                }
 
-                GridLayout {
-                    Layout.fillWidth: true
-                    columns: 2
-                    columnSpacing: Theme.spacing16
-                    rowSpacing: Theme.spacing12
+                    SectionHeader { text: qsTr("Wallet Management") }
 
-                    Text { Layout.preferredWidth: Theme.formLabelWidth; text: qsTr("Import keystore"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
-                    AppButton { Layout.fillWidth: true; text: qsTr("Choose keystore file..."); variant: "secondary"; size: "M"; onClicked: if (walletBridge) walletBridge.importWalletFile() }
+                    Text {
+                        Layout.fillWidth: true
+                        text: qsTr("Keystore: %1").arg(walletBridge ? walletBridge.keystorePath : "—")
+                        color: Theme.textMuted
+                        font.pixelSize: Theme.fontCaption
+                        wrapMode: Text.WrapAnywhere
+                    }
 
-                    Text { Layout.preferredWidth: Theme.formLabelWidth; text: qsTr("Backup keystore"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
-                    AppButton { Layout.fillWidth: true; text: qsTr("Save backup to file..."); variant: "secondary"; size: "M"; onClicked: if (walletBridge) walletBridge.backupWalletFile() }
-
-                    Text { Layout.preferredWidth: Theme.formLabelWidth; text: qsTr("Treasury"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: Theme.spacing8
-                        AppInput { id: treasuryInput; Layout.fillWidth: true; text: walletBridge ? walletBridge.treasuryAddress : ""; placeholderText: qsTr("Treasury address") }
-                        AppButton { text: qsTr("Set Treasury"); variant: "secondary"; size: "M"; onClicked: if (walletBridge) walletBridge.setTreasuryAddress(treasuryInput.text) }
+                        spacing: Theme.spacing12
+
+                        AppButton { text: qsTr("Create New Wallet"); variant: "primary"; size: "M"; onClicked: if (walletBridge) walletBridge.createWallet() }
+                        AppButton { text: qsTr("Open/Load Wallet"); variant: "secondary"; size: "M"; onClicked: if (walletBridge) walletBridge.loadWallet() }
+                        Item { Layout.fillWidth: true }
                     }
 
-                    Text { Layout.preferredWidth: Theme.formLabelWidth; text: qsTr("Auto-sweep"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
-                    AppToggleSwitch { checked: walletBridge ? walletBridge.autoSweep : false; onToggled: if (walletBridge) walletBridge.setAutoSweep(checked) }
-                }
-            }
-
-            Rectangle { Layout.fillWidth: true; height: Theme.borderWidth; color: Theme.dividerColor }
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: Theme.spacing12
-
-                SectionHeader { text: qsTr("Node / Network") }
-
-                GridLayout {
-                    Layout.fillWidth: true
-                    columns: 2
-                    columnSpacing: Theme.spacing16
-                    rowSpacing: Theme.spacing12
-
-                    Text { Layout.preferredWidth: Theme.formLabelWidth; text: qsTr("Network"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
-                    AppComboBox {
-                        id: netCombo
+                    GridLayout {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: Theme.controlHeight
-                        model: ["mainnet", "testnet", "regtest"]
-                        currentIndex: { var n = walletBridge ? walletBridge.network : "mainnet"; var i = model.indexOf(n); return i >= 0 ? i : 0 }
+                        columns: 2
+                        columnSpacing: Theme.spacing16
+                        rowSpacing: Theme.spacing12
+
+                        Text { Layout.preferredWidth: content.labelWidth; text: qsTr("Import keystore"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Theme.spacing8
+                            AppButton { text: qsTr("Choose keystore file..."); variant: "secondary"; size: "S"; onClicked: if (walletBridge) walletBridge.importWalletFile() }
+                            Item { Layout.fillWidth: true }
+                        }
+
+                        Text { Layout.preferredWidth: content.labelWidth; text: qsTr("Backup keystore"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Theme.spacing8
+                            AppButton { text: qsTr("Save backup to file..."); variant: "secondary"; size: "S"; onClicked: if (walletBridge) walletBridge.backupWalletFile() }
+                            Item { Layout.fillWidth: true }
+                        }
+
+                        Text { Layout.preferredWidth: content.labelWidth; text: qsTr("Treasury"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Theme.spacing8
+                            AppInput { id: treasuryInput; Layout.fillWidth: true; Layout.preferredHeight: Theme.controlHeight; text: walletBridge ? walletBridge.treasuryAddress : ""; placeholderText: qsTr("Treasury address") }
+                            AppButton { text: qsTr("Set Treasury"); variant: "secondary"; size: "S"; onClicked: if (walletBridge) walletBridge.setTreasuryAddress(treasuryInput.text) }
+                        }
+
+                        Text { Layout.preferredWidth: content.labelWidth; text: qsTr("Auto-sweep"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
+                        AppToggleSwitch { checked: walletBridge ? walletBridge.autoSweep : false; onToggled: if (walletBridge) walletBridge.setAutoSweep(checked) }
                     }
-
-                    Text { Layout.preferredWidth: Theme.formLabelWidth; text: qsTr("Datadir"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
-                    AppInput { id: datadirInput; Layout.fillWidth: true; text: walletBridge ? walletBridge.datadir : "" }
-
-                    Text { Layout.preferredWidth: Theme.formLabelWidth; text: qsTr("Node RPC"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
-                    AppInput { id: rpcInput; Layout.fillWidth: true; text: walletBridge ? walletBridge.nodeRpc : "" }
                 }
 
-                RowLayout {
+                Rectangle { Layout.fillWidth: true; height: Theme.borderWidth; color: Theme.dividerColor }
+
+                ColumnLayout {
                     Layout.fillWidth: true
                     spacing: Theme.spacing12
-                    AppButton { text: qsTr("Apply Settings"); variant: "primary"; size: "M"; onClicked: if (walletBridge) walletBridge.applySettings(netCombo.currentText, datadirInput.text, rpcInput.text) }
-                    Item { Layout.fillWidth: true }
+
+                    SectionHeader { text: qsTr("Node / Network") }
+
+                    GridLayout {
+                        Layout.fillWidth: true
+                        columns: 2
+                        columnSpacing: Theme.spacing16
+                        rowSpacing: Theme.spacing12
+
+                        Text { Layout.preferredWidth: content.labelWidth; text: qsTr("Network"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
+                        AppComboBox {
+                            id: netCombo
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: Theme.controlHeight
+                            model: ["mainnet", "testnet", "regtest"]
+                            currentIndex: { var n = walletBridge ? walletBridge.network : "mainnet"; var i = model.indexOf(n); return i >= 0 ? i : 0 }
+                        }
+
+                        Text { Layout.preferredWidth: content.labelWidth; text: qsTr("Datadir"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
+                        AppInput { id: datadirInput; Layout.fillWidth: true; Layout.preferredHeight: Theme.controlHeight; text: walletBridge ? walletBridge.datadir : "" }
+
+                        Text { Layout.preferredWidth: content.labelWidth; text: qsTr("Node RPC"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
+                        AppInput { id: rpcInput; Layout.fillWidth: true; Layout.preferredHeight: Theme.controlHeight; text: walletBridge ? walletBridge.nodeRpc : "" }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacing12
+                        AppButton { text: qsTr("Apply Settings"); variant: "primary"; size: "M"; onClicked: if (walletBridge) walletBridge.applySettings(netCombo.currentText, datadirInput.text, rpcInput.text) }
+                        Item { Layout.fillWidth: true }
+                    }
                 }
             }
-
-            Item { Layout.preferredHeight: Theme.spacing16 }
         }
     }
 }
