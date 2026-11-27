@@ -15,6 +15,22 @@ Entry format (always write entries in **English** — see `docs/DEVELOPMENT.md`)
 
 ---
 
+## 2026-11-27 — Make sync detail text fully readable
+
+- **Time (UTC):** 2026-11-27T14:53:55Z
+- **Action:**
+  - Replaced the elided 116px metric value field in `SyncSection.qml` with a wrapping two-column row: labels keep a 100px column, values fill the remainder and wrap to a second line when needed. No sync value is cut off horizontally anymore.
+  - Added a dedicated full-width, word-wrapped banner row for the offline `Live data: Waiting for node connection` message in both Wallet Sync and Node Sync, so the complete message is visible instead of being truncated to a few characters.
+  - Reduced detail spacing from 4px to 2px and trimmed banner padding so the extra wrapped lines still fit inside the expanded accordion height.
+- **Reason/Request:** User reported that the final sync line (especially `Live data`) was only partly visible/readable after expanding a section.
+- **Files changed:** `apps/phantomx-qt/qml/components/SyncSection.qml`, `apps/phantomx-qt/qml/components/SyncDashboard.qml`, `docs/CHANGELOG_ACTIONS.md`.
+- **Verification:**
+  - `cmake --build build -j$(nproc)` → success.
+  - `qmllint` on the changed sync QML files → no syntax/type errors.
+  - `QT_QPA_PLATFORM=offscreen timeout 5 ./build/bin/phantomx-qt` → no QML/runtime errors (exit `124` is the expected timeout for the long-running GUI).
+  - `ctest --test-dir build --output-on-failure -j4` → **11/11 passed**.
+  - `git diff --check` → clean.
+
 ## 2026-11-27 — Lift sync dashboard and tidy balance card
 
 - **Time (UTC):** 2026-11-27T14:49:18Z

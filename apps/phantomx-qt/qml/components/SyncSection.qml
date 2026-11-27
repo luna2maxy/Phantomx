@@ -148,7 +148,7 @@ Rectangle {
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.margins: 6
-            spacing: 4
+            spacing: 2
 
             Rectangle {
                 Layout.fillWidth: true
@@ -189,24 +189,57 @@ Rectangle {
 
             Repeater {
                 model: root.metrics
-                RowLayout {
+                ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: Theme.spacing8
-                    Text {
-                        text: modelData.label
-                        color: Theme.textMuted
-                        font.pixelSize: 10
-                        elide: Text.ElideRight
+                    spacing: 0
+
+                    RowLayout {
+                        visible: !modelData.fullWidth
                         Layout.fillWidth: true
+                        spacing: Theme.spacing8
+                        Text {
+                            text: modelData.label
+                            color: Theme.textMuted
+                            font.pixelSize: 10
+                            wrapMode: Text.WordWrap
+                            elide: Text.ElideNone
+                            Layout.preferredWidth: 100
+                            Layout.minimumWidth: 84
+                            Layout.maximumWidth: 100
+                        }
+                        Text {
+                            text: modelData.value
+                            color: modelData.tone ? toneColor(modelData.tone) : Theme.text
+                            font.pixelSize: 10
+                            font.weight: Theme.weightDemi
+                            wrapMode: Text.WordWrap
+                            elide: Text.ElideNone
+                            horizontalAlignment: Text.AlignRight
+                            Layout.fillWidth: true
+                            Layout.minimumWidth: 72
+                        }
                     }
-                    Text {
-                        text: modelData.value
-                        color: modelData.tone ? toneColor(modelData.tone) : Theme.text
-                        font.pixelSize: 10
-                        font.weight: Theme.weightDemi
-                        horizontalAlignment: Text.AlignRight
-                        Layout.maximumWidth: 116
-                        elide: Text.ElideRight
+
+                    Rectangle {
+                        visible: modelData.fullWidth
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: bannerText.implicitHeight + 4
+                        radius: Theme.radiusSmall
+                        color: Theme.withAlpha(toneColor(modelData.tone || "error"), 0.10)
+                        border.width: Theme.borderWidth
+                        border.color: Theme.withAlpha(toneColor(modelData.tone || "error"), 0.28)
+                        Text {
+                            id: bannerText
+                            anchors.fill: parent
+                            anchors.margins: 2
+                            text: modelData.value
+                            color: toneColor(modelData.tone || "error")
+                            font.pixelSize: 10
+                            font.weight: Theme.weightDemi
+                            wrapMode: Text.WordWrap
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
                     }
                 }
             }

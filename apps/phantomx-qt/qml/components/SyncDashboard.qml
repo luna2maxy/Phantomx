@@ -74,7 +74,11 @@ Rectangle {
     }
 
     function metric(label, value, tone) {
-        return { label: label, value: value, tone: tone || "" }
+        return { label: label, value: value, tone: tone || "", fullWidth: false }
+    }
+
+    function message(text, tone) {
+        return { label: "", value: text, tone: tone || "error", fullWidth: true }
     }
 
     function walletState() {
@@ -169,7 +173,7 @@ Rectangle {
                         metric(qsTr("Last scanned"), agoText(walletBridge ? walletBridge.walletLastScanMs : 0), "info")
                     ]
                     if (!live && walletBridge && !walletBridge.online && !walletBridge.usingLocalData) {
-                        rows.push(metric(qsTr("Live data"), qsTr("Waiting for node connection"), "error"))
+                        rows.push(message(qsTr("Live data: Waiting for node connection"), "error"))
                     }
                     return rows
                 }
@@ -216,7 +220,7 @@ Rectangle {
                         metric(qsTr("Last successful sync"), agoText(walletBridge ? walletBridge.nodeLastSyncMs : 0), "info")
                     ]
                     if (!live && walletBridge && !walletBridge.online && !walletBridge.usingLocalData) {
-                        rows.push(metric(qsTr("Live data"), qsTr("Waiting for node connection"), "error"))
+                        rows.push(message(qsTr("Live data: Waiting for node connection"), "error"))
                     }
                     return rows
                 }
