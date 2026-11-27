@@ -1,6 +1,7 @@
 #include "WalletBridge.hpp"
 
 #include <QClipboard>
+#include <QFileDialog>
 #include <QGuiApplication>
 #include <QtGlobal>
 
@@ -292,6 +293,30 @@ void WalletBridge::importWallet(const QString& secretHex) {
   if (service_->importWallet(secretHex, &err)) emit message(QStringLiteral("Wallet imported."), false);
   else emit message(err, true);
   emit stateChanged();
+}
+
+void WalletBridge::importWalletFile() {
+  if (!service_) return;
+  const QString path = QFileDialog::getOpenFileName(
+      nullptr, QStringLiteral("Import PhantomX Keystore"), QString(),
+      QStringLiteral("PhantomX Keystore (*.keystore *.json *.bak);;All Files (*)"));
+  if (path.isEmpty()) return;
+  QString err;
+  if (service_->importWalletFile(path, &err)) emit message(QStringLiteral("Keystore file imported."), false);
+  else emit message(err, true);
+  emit stateChanged();
+}
+
+void WalletBridge::backupWalletFile() {
+  if (!service_) return;
+  const QString path = QFileDialog::getSaveFileName(
+      nullptr, QStringLiteral("Backup PhantomX Keystore"),
+      QStringLiteral("phantomx-wallet.keystore.bak"),
+      QStringLiteral("PhantomX Keystore (*.keystore *.bak);;All Files (*)"));
+  if (path.isEmpty()) return;
+  QString err;
+  if (service_->backupWallet(path, &err)) emit message(QStringLiteral("Backup saved."), false);
+  else emit message(err, true);
 }
 
 void WalletBridge::backupWallet(const QString& destinationPath) {

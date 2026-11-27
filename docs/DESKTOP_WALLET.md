@@ -24,7 +24,7 @@ Binary: `build-ubuntu/bin/phantomx-qt`
 | Feature | Status | Notes |
 |---|---|---|
 | Default wallet/address | Implemented | If no keystore exists, a default local wallet is created automatically. UI shows a backup warning banner. |
-| Create/Open/Import/Backup | Implemented (basic) | Available in Settings > Wallet Management. Secret key stays local and is never sent to RPC/server. |
+| Create/Open/Import/Backup | Implemented | Create/load use the local keystore. Import opens a native file browser to select a keystore file (not a secret-key string); Backup opens a native save dialog to write the keystore into the file manager. Secret keys stay local and are never sent to RPC/server. |
 | Balance | Implemented | From real wallet/node RPC; shows `Not Available` when node is offline. |
 | Immature balance | Implemented | Overview shows the node-reported `immature_atoms` from `getbalance` as `Immature: <amount> PHX`, including `0 PHX` when the node is online. When only local fallback data is available, maturity cannot be determined, so the line is hidden unless a non-zero value is known. |
 | Send | Implemented (basic) | Presets Fast (2 conf) / Normal (6 conf, default) / Slow (12 conf) with different fees; tx sent via wallet core/node RPC. |
@@ -46,7 +46,7 @@ Binary: `build-ubuntu/bin/phantomx-qt`
 - **Receive**: treasury address, Generate New Address, Generate 5 Addresses (one keystore, many addresses).
 - **Transactions**: transaction/UTXO table.
 - **PoI**: Start/Stop, bandwidth, domain, score/epoch, status.
-- **Settings**: wallet management (create/open/import/backup/treasury), node/network config.
+- **Settings**: wallet management (create/open, import keystore file via file browser, backup keystore via save dialog, treasury), node/network config.
 
 ## Security
 

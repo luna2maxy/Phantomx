@@ -15,6 +15,24 @@ Entry format (always write entries in **English** — see `docs/DEVELOPMENT.md`)
 
 ---
 
+## 2026-11-27 — File-browser keystore import/backup and finer toggle offset
+
+- **Time (UTC):** 2026-11-27T13:57:39Z
+- **Action:**
+  - Reduced the balance-card hide/show toggle inset from 5px to 3px from the top and right edges (2px further up and 2px further right).
+  - Replaced the Settings "Import secret hex" field with an **Import keystore** button that opens a native file browser and selects a keystore file, not a raw secret key. The selected file is validated before it replaces the active keystore.
+  - Replaced the Settings "Backup path" field with a **Backup keystore** button that opens a native save dialog and writes the keystore to the chosen location in the file manager.
+  - Added `WalletService::importWalletFile()` and `WalletBridge::importWalletFile()` / `backupWalletFile()`; the legacy secret-hex import remains available in the API but is no longer shown in the UI.
+  - Updated `docs/DESKTOP_WALLET.md` to describe the new flows.
+- **Reason/Request:** User: "It looks like it is short 2px up and 2px right. Also make Import open a file browser and select a wallet keystore file rather than a secret key, and let Backup save the keystore through the file manager."
+- **Files changed:** `apps/phantomx-qt/qml/components/BalanceCard.qml`, `apps/phantomx-qt/qml/pages/SettingsPage.qml`, `apps/phantomx-qt/WalletBridge.hpp`, `apps/phantomx-qt/WalletBridge.cpp`, `apps/phantomx-qt/WalletService.hpp`, `apps/phantomx-qt/WalletService.cpp`, `docs/DESKTOP_WALLET.md`, `docs/CHANGELOG_ACTIONS.md`.
+- **Verification:**
+  - `cmake --build build --target phantomx-qt -j$(nproc)` → success.
+  - `qmllint` on the changed QML files → no syntax errors.
+  - `QT_QPA_PLATFORM=offscreen timeout 5 ./build/bin/phantomx-qt` → no QML/runtime errors in output (exit `124` is the expected timeout for the long-running GUI).
+  - `ctest --test-dir build --output-on-failure -j4` → **11/11 passed**.
+  - `git diff --check` → clean.
+
 ## 2026-11-27 — Anchor Qt wallet hide/show balance toggle to card top-right
 
 - **Time (UTC):** 2026-11-27T13:53:07Z

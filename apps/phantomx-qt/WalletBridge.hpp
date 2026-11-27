@@ -98,7 +98,9 @@ class WalletBridge final : public QObject {
   Q_INVOKABLE void createWallet();
   Q_INVOKABLE void loadWallet();
   Q_INVOKABLE void importWallet(const QString& secretHex);
+  Q_INVOKABLE void importWalletFile();
   Q_INVOKABLE void backupWallet(const QString& destinationPath);
+  Q_INVOKABLE void backupWalletFile();
   Q_INVOKABLE void applySettings(const QString& network, const QString& datadir, const QString& rpc);
   Q_INVOKABLE void setTreasuryAddress(const QString& address);
   Q_INVOKABLE void setAutoSweep(bool enabled);

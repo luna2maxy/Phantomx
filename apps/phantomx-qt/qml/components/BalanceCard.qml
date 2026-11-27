@@ -9,7 +9,7 @@ Rectangle {
     property bool hasImmatureBalance: false
     property string network: "mainnet"
     property bool hideBalance: false
-    property int toggleInset: 5
+    property int toggleInset: 3
     property int toggleSize: 28
 
     implicitHeight: Theme.balanceCardHeight

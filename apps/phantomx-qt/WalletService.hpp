@@ -59,6 +59,7 @@ class WalletService final : public QObject {
   [[nodiscard]] bool createWallet(QString* error = nullptr);
   [[nodiscard]] bool loadWallet(QString* error = nullptr);
   [[nodiscard]] bool importWallet(const QString& secret_hex, QString* error = nullptr);
+  [[nodiscard]] bool importWalletFile(const QString& sourcePath, QString* error = nullptr);
   [[nodiscard]] bool backupWallet(const QString& destinationPath, QString* error = nullptr);
   [[nodiscard]] QString generateNewAddress(const QString& label = QString(), QString* error = nullptr);
   [[nodiscard]] QStringList accountLabels() const;

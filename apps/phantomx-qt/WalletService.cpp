@@ -22,6 +22,7 @@
 #include "phantomx/primitives/transaction.hpp"
 #include "phantomx/utxo/tx_builder.hpp"
 #include "phantomx/utxo/validation.hpp"
+#include "phantomx/wallet/keystore.hpp"
 
 #include <jansson.h>
 
@@ -233,6 +234,79 @@ bool WalletService::importWallet(const QString& secret_hex, QString* error) {
   auto_created_wallet_ = false;
   emit message(tr("Wallet imported. Secret key stays local."), false);
   audit("import_wallet", QString::fromStdString(wallet_.keystore_path().string()));
+  emit walletChanged();
+  return true;
+}
+
+bool WalletService::importWalletFile(const QString& sourcePath, QString* error) {
+  const QString trimmed = sourcePath.trimmed();
+  if (trimmed.isEmpty()) {
+    if (error) *error = tr("Keystore file path is empty.");
+    return false;
+  }
+
+  const std::filesystem::path src(trimmed.toStdString());
+  std::error_code ec;
+  if (!std::filesystem::is_regular_file(src, ec)) {
+    const QString msg = tr("Keystore file not found: %1").arg(trimmed);
+    if (error) *error = msg;
+    emit message(msg, true);
+    return false;
+  }
+
+  // Validate before replacing the active keystore so a bad file cannot destroy it.
+  auto checked = phantomx::wallet::Keystore::load(src);
+  if (!checked.ok()) {
+    const QString msg = errText(checked.error());
+    if (error) *error = msg;
+    emit message(msg, true);
+    return false;
+  }
+
+  rebuildWallet();
+  const auto dest = wallet_.keystore_path();
+  bool sameFile = false;
+  if (std::filesystem::exists(dest, ec)) {
+    std::error_code eq;
+    sameFile = std::filesystem::equivalent(src, dest, eq) && !eq;
+  }
+
+  if (!sameFile) {
+    if (dest.has_parent_path()) {
+      std::filesystem::create_directories(dest.parent_path(), ec);
+      if (ec) {
+        const QString msg = tr("Unable to create keystore directory: %1").arg(QString::fromStdString(ec.message()));
+        if (error) *error = msg;
+        emit message(msg, true);
+        return false;
+      }
+    }
+    std::filesystem::copy_file(src, dest, std::filesystem::copy_options::overwrite_existing, ec);
+    if (ec) {
+      const QString msg = tr("Keystore import failed: %1").arg(QString::fromStdString(ec.message()));
+      if (error) *error = msg;
+      emit message(msg, true);
+      return false;
+    }
+  }
+
+  auto opened = wallet_.open();
+  if (!opened.ok()) {
+    const QString msg = errText(opened.error());
+    if (error) *error = msg;
+    emit message(msg, true);
+    return false;
+  }
+  if (!wallet_.has_wallet()) {
+    const QString msg = tr("No wallet key found in the selected keystore.");
+    if (error) *error = msg;
+    emit message(msg, true);
+    return false;
+  }
+
+  auto_created_wallet_ = false;
+  emit message(tr("Keystore file imported. Secret keys stay local."), false);
+  audit("import_wallet_file", QString::fromStdString(dest.string()));
   emit walletChanged();
   return true;
 }

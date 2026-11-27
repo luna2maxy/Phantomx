@@ -52,21 +52,11 @@ Item {
                     columnSpacing: Theme.spacing16
                     rowSpacing: Theme.spacing12
 
-                    Text { Layout.preferredWidth: Theme.formLabelWidth; text: qsTr("Import secret hex"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: Theme.spacing8
-                        AppInput { id: importInput; Layout.fillWidth: true; placeholderText: qsTr("Local only, never sent to server"); echoMode: TextInput.Password }
-                        AppButton { text: qsTr("Import"); variant: "secondary"; size: "M"; onClicked: { if (walletBridge) { walletBridge.importWallet(importInput.text); importInput.text = "" } } }
-                    }
+                    Text { Layout.preferredWidth: Theme.formLabelWidth; text: qsTr("Import keystore"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
+                    AppButton { Layout.fillWidth: true; text: qsTr("Choose keystore file..."); variant: "secondary"; size: "M"; onClicked: if (walletBridge) walletBridge.importWalletFile() }
 
-                    Text { Layout.preferredWidth: Theme.formLabelWidth; text: qsTr("Backup path"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: Theme.spacing8
-                        AppInput { id: backupInput; Layout.fillWidth: true; placeholderText: qsTr("/path/to/wallet.keystore.bak") }
-                        AppButton { text: qsTr("Backup"); variant: "secondary"; size: "M"; onClicked: if (walletBridge) walletBridge.backupWallet(backupInput.text) }
-                    }
+                    Text { Layout.preferredWidth: Theme.formLabelWidth; text: qsTr("Backup keystore"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
+                    AppButton { Layout.fillWidth: true; text: qsTr("Save backup to file..."); variant: "secondary"; size: "M"; onClicked: if (walletBridge) walletBridge.backupWalletFile() }
 
                     Text { Layout.preferredWidth: Theme.formLabelWidth; text: qsTr("Treasury"); color: Theme.text; font.pixelSize: Theme.fontBody; elide: Text.ElideRight }
                     RowLayout {
