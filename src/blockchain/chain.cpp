@@ -279,19 +279,19 @@ Result<void> ChainDatabase::put_verifier_challenge_with_quota(const VerifierChal
     {
       const std::uint64_t cutoff = (now_ts > consumed_retention_sec) ? (now_ts - consumed_retention_sec) : 0;
       auto stc = db_.prepare("DELETE FROM verifier_challenges WHERE challenge_id IN (SELECT challenge_id FROM verifier_challenges WHERE (expires_at < ? AND used_at IS NULL) OR (used_at IS NOT NULL AND used_at < ?) LIMIT ?);");
-      if(!stc.ok()) { auto r=handle_stage_error("CLEANUP","sqlite3_prepare_v2", db_.last_diag(), stc.error()); if(r.error().message()=="retry") continue; return r; }
-      auto c1 = stc.value().bind_u64(1, now_ts); if(!c1.ok()){ auto r=handle_stage_error("CLEANUP","sqlite3_bind_int64", db_.last_diag(), c1.error()); if(r.error().message()=="retry") continue; return r; }
-      auto c2 = stc.value().bind_u64(2, cutoff); if(!c2.ok()){ auto r=handle_stage_error("CLEANUP","sqlite3_bind_int64", db_.last_diag(), c2.error()); if(r.error().message()=="retry") continue; return r; }
-      auto c3 = stc.value().bind_u64(3, cleanup_batch); if(!c3.ok()){ auto r=handle_stage_error("CLEANUP","sqlite3_bind_int64", db_.last_diag(), c3.error()); if(r.error().message()=="retry") continue; return r; }
-      auto ce = stc.value().execute(); if(!ce.ok()){ auto r=handle_stage_error("CLEANUP","sqlite3_step", db_.last_diag(), ce.error()); if(r.error().message()=="retry") continue; return r; }
+      if(!stc.ok()) { auto hr=handle_stage_error("CLEANUP","sqlite3_prepare_v2", db_.last_diag(), stc.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto c1 = stc.value().bind_u64(1, now_ts); if(!c1.ok()){ auto hr=handle_stage_error("CLEANUP","sqlite3_bind_int64", db_.last_diag(), c1.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto c2 = stc.value().bind_u64(2, cutoff); if(!c2.ok()){ auto hr=handle_stage_error("CLEANUP","sqlite3_bind_int64", db_.last_diag(), c2.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto c3 = stc.value().bind_u64(3, cleanup_batch); if(!c3.ok()){ auto hr=handle_stage_error("CLEANUP","sqlite3_bind_int64", db_.last_diag(), c3.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto ce = stc.value().execute(); if(!ce.ok()){ auto hr=handle_stage_error("CLEANUP","sqlite3_step", db_.last_diag(), ce.error()); if(hr.error().message()=="retry") continue; return hr; }
       emit(tx_id, attempt, "CLEANUP", "sqlite3_step", true, nullptr, us_since(), true, false, false, nullptr, nullptr, "");
     }
     // Global active cap
     {
       auto stg = db_.prepare("SELECT COUNT(*) FROM verifier_challenges WHERE used_at IS NULL AND expires_at >= ?;");
-      if(!stg.ok()) { auto r=handle_stage_error("GLOBAL_COUNT","sqlite3_prepare_v2", db_.last_diag(), stg.error()); if(r.error().message()=="retry") continue; return r; }
-      auto g1 = stg.value().bind_u64(1, now_ts); if(!g1.ok()){ auto r=handle_stage_error("GLOBAL_COUNT","sqlite3_bind_int64", db_.last_diag(), g1.error()); if(r.error().message()=="retry") continue; return r; }
-      auto gr = stg.value().step(); if(!gr.ok()){ auto r=handle_stage_error("GLOBAL_COUNT","sqlite3_step", db_.last_diag(), gr.error()); if(r.error().message()=="retry") continue; return r; }
+      if(!stg.ok()) { auto hr=handle_stage_error("GLOBAL_COUNT","sqlite3_prepare_v2", db_.last_diag(), stg.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto g1 = stg.value().bind_u64(1, now_ts); if(!g1.ok()){ auto hr=handle_stage_error("GLOBAL_COUNT","sqlite3_bind_int64", db_.last_diag(), g1.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto gr = stg.value().step(); if(!gr.ok()){ auto hr=handle_stage_error("GLOBAL_COUNT","sqlite3_step", db_.last_diag(), gr.error()); if(hr.error().message()=="retry") continue; return hr; }
       const std::uint64_t gcount = gr.value() ? stg.value().column_u64(0) : 0;
       emit(tx_id, attempt, "GLOBAL_COUNT", "sqlite3_step", true, nullptr, us_since(), true, false, false, nullptr, nullptr, "");
       if (gcount >= global_cap) {
@@ -307,11 +307,11 @@ Result<void> ChainDatabase::put_verifier_challenge_with_quota(const VerifierChal
     // Per-identity active cap (OR verifier_id/owner as current policy; documented).
     {
       auto sti = db_.prepare("SELECT COUNT(*) FROM verifier_challenges WHERE used_at IS NULL AND expires_at >= ? AND (verifier_id=? OR owner=?);");
-      if(!sti.ok()) { auto r=handle_stage_error("IDENTITY_COUNT","sqlite3_prepare_v2", db_.last_diag(), sti.error()); if(r.error().message()=="retry") continue; return r; }
-      auto i1 = sti.value().bind_u64(1, now_ts); if(!i1.ok()){ auto r=handle_stage_error("IDENTITY_COUNT","sqlite3_bind_int64", db_.last_diag(), i1.error()); if(r.error().message()=="retry") continue; return r; }
-      auto i2 = sti.value().bind_text(2, r.verifier_id); if(!i2.ok()){ auto r=handle_stage_error("IDENTITY_COUNT","sqlite3_bind_text", db_.last_diag(), i2.error()); if(r.error().message()=="retry") continue; return r; }
-      auto i3 = sti.value().bind_text(3, r.owner); if(!i3.ok()){ auto r=handle_stage_error("IDENTITY_COUNT","sqlite3_bind_text", db_.last_diag(), i3.error()); if(r.error().message()=="retry") continue; return r; }
-      auto ir = sti.value().step(); if(!ir.ok()){ auto r=handle_stage_error("IDENTITY_COUNT","sqlite3_step", db_.last_diag(), ir.error()); if(r.error().message()=="retry") continue; return r; }
+      if(!sti.ok()) { auto hr=handle_stage_error("IDENTITY_COUNT","sqlite3_prepare_v2", db_.last_diag(), sti.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto i1 = sti.value().bind_u64(1, now_ts); if(!i1.ok()){ auto hr=handle_stage_error("IDENTITY_COUNT","sqlite3_bind_int64", db_.last_diag(), i1.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto i2 = sti.value().bind_text(2, r.verifier_id); if(!i2.ok()){ auto hr=handle_stage_error("IDENTITY_COUNT","sqlite3_bind_text", db_.last_diag(), i2.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto i3 = sti.value().bind_text(3, r.owner); if(!i3.ok()){ auto hr=handle_stage_error("IDENTITY_COUNT","sqlite3_bind_text", db_.last_diag(), i3.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto ir = sti.value().step(); if(!ir.ok()){ auto hr=handle_stage_error("IDENTITY_COUNT","sqlite3_step", db_.last_diag(), ir.error()); if(hr.error().message()=="retry") continue; return hr; }
       const std::uint64_t icount = ir.value() ? sti.value().column_u64(0) : 0;
       emit(tx_id, attempt, "IDENTITY_COUNT", "sqlite3_step", true, nullptr, us_since(), true, false, false, nullptr, nullptr, "");
       if (icount >= per_identity_cap) {
@@ -328,16 +328,16 @@ Result<void> ChainDatabase::put_verifier_challenge_with_quota(const VerifierChal
     // Insert
     {
       auto st = db_.prepare("INSERT INTO verifier_challenges(challenge_id,verifier_id,pubkey_hex,owner,network,payload_blob,issued_at,expires_at,used_at,status) VALUES(?,?,?,?,?,?,?,?,NULL,'issued')");
-      if (!st.ok()) { auto r=handle_stage_error("INSERT","sqlite3_prepare_v2", db_.last_diag(), st.error()); if(r.error().message()=="retry") continue; return r; }
-      auto b1=st.value().bind_text(1,r.challenge_id); if(!b1.ok()){ auto r=handle_stage_error("INSERT","sqlite3_bind_text", db_.last_diag(), b1.error()); if(r.error().message()=="retry") continue; return r; }
-      auto b2=st.value().bind_text(2,r.verifier_id); if(!b2.ok()){ auto r=handle_stage_error("INSERT","sqlite3_bind_text", db_.last_diag(), b2.error()); if(r.error().message()=="retry") continue; return r; }
-      auto b3=st.value().bind_text(3,r.pubkey_hex); if(!b3.ok()){ auto r=handle_stage_error("INSERT","sqlite3_bind_text", db_.last_diag(), b3.error()); if(r.error().message()=="retry") continue; return r; }
-      auto b4=st.value().bind_text(4,r.owner); if(!b4.ok()){ auto r=handle_stage_error("INSERT","sqlite3_bind_text", db_.last_diag(), b4.error()); if(r.error().message()=="retry") continue; return r; }
-      auto b5=st.value().bind_text(5,r.network); if(!b5.ok()){ auto r=handle_stage_error("INSERT","sqlite3_bind_text", db_.last_diag(), b5.error()); if(r.error().message()=="retry") continue; return r; }
-      auto b6=st.value().bind_blob(6,std::span<const std::uint8_t>(r.payload_blob.data(), r.payload_blob.size())); if(!b6.ok()){ auto r=handle_stage_error("INSERT","sqlite3_bind_blob", db_.last_diag(), b6.error()); if(r.error().message()=="retry") continue; return r; }
-      auto b7=st.value().bind_u64(7,r.issued_at); if(!b7.ok()){ auto r=handle_stage_error("INSERT","sqlite3_bind_int64", db_.last_diag(), b7.error()); if(r.error().message()=="retry") continue; return r; }
-      auto b8=st.value().bind_u64(8,r.expires_at); if(!b8.ok()){ auto r=handle_stage_error("INSERT","sqlite3_bind_int64", db_.last_diag(), b8.error()); if(r.error().message()=="retry") continue; return r; }
-      auto ex = st.value().execute(); if(!ex.ok()){ auto r=handle_stage_error("INSERT","sqlite3_step", db_.last_diag(), ex.error()); if(r.error().message()=="retry") continue; return r; }
+      if (!st.ok()) { auto hr=handle_stage_error("INSERT","sqlite3_prepare_v2", db_.last_diag(), st.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto b1=st.value().bind_text(1,r.challenge_id); if(!b1.ok()){ auto hr=handle_stage_error("INSERT","sqlite3_bind_text", db_.last_diag(), b1.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto b2=st.value().bind_text(2,r.verifier_id); if(!b2.ok()){ auto hr=handle_stage_error("INSERT","sqlite3_bind_text", db_.last_diag(), b2.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto b3=st.value().bind_text(3,r.pubkey_hex); if(!b3.ok()){ auto hr=handle_stage_error("INSERT","sqlite3_bind_text", db_.last_diag(), b3.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto b4=st.value().bind_text(4,r.owner); if(!b4.ok()){ auto hr=handle_stage_error("INSERT","sqlite3_bind_text", db_.last_diag(), b4.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto b5=st.value().bind_text(5,r.network); if(!b5.ok()){ auto hr=handle_stage_error("INSERT","sqlite3_bind_text", db_.last_diag(), b5.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto b6=st.value().bind_blob(6,std::span<const std::uint8_t>(r.payload_blob.data(), r.payload_blob.size())); if(!b6.ok()){ auto hr=handle_stage_error("INSERT","sqlite3_bind_blob", db_.last_diag(), b6.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto b7=st.value().bind_u64(7,r.issued_at); if(!b7.ok()){ auto hr=handle_stage_error("INSERT","sqlite3_bind_int64", db_.last_diag(), b7.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto b8=st.value().bind_u64(8,r.expires_at); if(!b8.ok()){ auto hr=handle_stage_error("INSERT","sqlite3_bind_int64", db_.last_diag(), b8.error()); if(hr.error().message()=="retry") continue; return hr; }
+      auto ex = st.value().execute(); if(!ex.ok()){ auto hr=handle_stage_error("INSERT","sqlite3_step", db_.last_diag(), ex.error()); if(hr.error().message()=="retry") continue; return hr; }
       emit(tx_id, attempt, "INSERT", "sqlite3_step", true, nullptr, us_since(), true, false, false, nullptr, nullptr, "");
     }
     auto cm = tx.commit();

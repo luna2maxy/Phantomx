@@ -906,21 +906,35 @@ PHX_TEST(ptm015c2_pop_v1_vector_and_mutation) {
     if (sigb.size()!=64 || pkb.size()!=32) { pos++; continue; }
     // decoder check mirrors v1 format rules (test-local duplicate to avoid exposing internals)
     auto decode_ok = [&](const std::vector<std::uint8_t>& in)->bool{
-      size_t off=0; if (in.size() < 10+2+1+2+1+2+32+2+32+32+8+8) return false;
+      size_t off=0;
+      if (in.size() < 10+2+1+2+1+2+32+2+32+32+8+8) return false;
       const char magic[10]={'P','H','X','V','E','R','P','O','P','\1'};
-      for(int i=0;i<10;++i) if(in[off+i] != static_cast<std::uint8_t>(magic[i])) return false; off+=10;
+      for(int i=0;i<10;++i) {
+        if(in[off+static_cast<size_t>(i)] != static_cast<std::uint8_t>(magic[i])) return false;
+      }
+      off+=10;
       auto u16=[&](uint16_t& v)->bool{ if(off+2>in.size()) return false; v=static_cast<uint16_t>(in[off])|(static_cast<uint16_t>(in[off+1])<<8); off+=2; return true; };
-      auto u64=[&](uint64_t& v)->bool{ if(off+8>in.size()) return false; v=0; for(int i=0;i<8;++i) v|=(static_cast<uint64_t>(in[off+i])<<(8*i)); off+=8; return true; };
-      uint16_t ver=0, proto=0, vid_len=0, owner_len=0; if(!u16(ver)||ver!=1) return false;
-      if(off>=in.size()) return false; off++; // network
+      auto u64=[&](uint64_t& v)->bool{ if(off+8>in.size()) return false; v=0; for(int i=0;i<8;++i) v|=(static_cast<uint64_t>(in[off+static_cast<size_t>(i)])<<(8*i)); off+=8; return true; };
+      uint16_t ver=0, proto=0, vid_len=0, owner_len=0;
+      if(!u16(ver)||ver!=1) return false;
+      if(off>=in.size()) return false;
+      off++; // network
       if(!u16(proto)||proto!=1) return false;
-      if(off>=in.size()) return false; if(in[off++]!=1) return false;
-      if(!u16(vid_len)||vid_len==0||vid_len>64||off+vid_len>in.size()) return false; off+=vid_len;
-      if(off+32>in.size()) return false; off+=32;
-      if(!u16(owner_len)||owner_len==0||owner_len>128||off+owner_len>in.size()) return false; off+=owner_len;
-      if(off+32+32>in.size()) return false; off+=64;
-      uint64_t issued=0, exp=0; if(!u64(issued)||!u64(exp)) return false;
-      if(off!=in.size()) return false; if(exp<issued) return false; return true;
+      if(off>=in.size()) return false;
+      if(in[off++]!=1) return false;
+      if(!u16(vid_len)||vid_len==0||vid_len>64||off+vid_len>in.size()) return false;
+      off+=vid_len;
+      if(off+32>in.size()) return false;
+      off+=32;
+      if(!u16(owner_len)||owner_len==0||owner_len>128||off+owner_len>in.size()) return false;
+      off+=owner_len;
+      if(off+32+32>in.size()) return false;
+      off+=64;
+      uint64_t issued=0, exp=0;
+      if(!u64(issued)||!u64(exp)) return false;
+      if(off!=in.size()) return false;
+      if(exp<issued) return false;
+      return true;
     };
     PHX_EXPECT(decode_ok(payload) == expect_decode);
     phantomx::crypto::PublicKey pk{}; std::copy(pkb.begin(), pkb.end(), pk.bytes.begin());
@@ -946,7 +960,7 @@ PHX_TEST(ptm015c5_challenge_db_independent_connections_single_consume) {
   rec.verifier_id = "v1"; rec.pubkey_hex = std::string(64,'1'); rec.owner="o1"; rec.network="regtest";
   rec.payload_blob = {1,2,3}; rec.issued_at = 100; rec.expires_at = 200; rec.status="issued";
   PHX_EXPECT(chain.value().put_verifier_challenge(rec).ok());
-  chain.value().close();
+  (void)chain.value().close();
 
   auto c1 = phantomx::blockchain::ChainDatabase::open(dbpath);
   auto c2 = phantomx::blockchain::ChainDatabase::open(dbpath);
@@ -957,7 +971,7 @@ PHX_TEST(ptm015c5_challenge_db_independent_connections_single_consume) {
   const bool ok1 = r1.ok() && r1.value();
   const bool ok2 = r2.ok() && r2.value();
   PHX_EXPECT((ok1 ? 1:0) + (ok2?1:0) == 1);
-  c1.value().close(); c2.value().close();
+  (void)c1.value().close(); (void)c2.value().close();
   auto c3 = phantomx::blockchain::ChainDatabase::open(dbpath);
   PHX_EXPECT(c3.ok());
   auto got = c3.value().get_verifier_challenge(rec.challenge_id);
@@ -1094,8 +1108,8 @@ PHX_TEST(ptm015c7_pop_v1_production_roundtrip_and_decode_rejects) {
   auto proto=out; proto[13]=2; PHX_EXPECT(!decode_pop_payload_v1(proto,d));
   auto op=out; op[15]=9; PHX_EXPECT(!decode_pop_payload_v1(op,d));
   auto badts=out; size_t off=badts.size()-16; uint64_t issued=200,exp=100;
-  for(int i=0;i<8;++i) badts[off+i]=static_cast<uint8_t>((issued>>(8*i))&0xFF);
-  for(int i=0;i<8;++i) badts[off+8+i]=static_cast<uint8_t>((exp>>(8*i))&0xFF);
+  for(int i=0;i<8;++i) badts[off+static_cast<size_t>(i)]=static_cast<uint8_t>((issued>>(8*i))&0xFF);
+  for(int i=0;i<8;++i) badts[off+8u+static_cast<size_t>(i)]=static_cast<uint8_t>((exp>>(8*i))&0xFF);
   PHX_EXPECT(!decode_pop_payload_v1(badts,d));
 }
 

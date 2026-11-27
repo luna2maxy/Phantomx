@@ -28,20 +28,32 @@ bool is_truthy(std::string_view value) {
   return v == "1" || v == "true" || v == "yes" || v == "on";
 }
 
-bool is_falsey(std::string_view value) {
+[[maybe_unused]] bool is_falsey(std::string_view value) {
   const auto v = lower_ascii(value);
   return v == "0" || v == "false" || v == "no" || v == "off" || v.empty();
 }
 
+inline const char* safe_getenv(const char* name) {
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#endif
+  const char* value = std::getenv(name);
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+  return value;
+}
+
 std::optional<std::filesystem::path> home_dir() {
 #ifdef _WIN32
-  const char* appdata = std::getenv("APPDATA");
+  const char* appdata = safe_getenv("APPDATA");
   if (appdata != nullptr && *appdata != '\0') return std::filesystem::path(appdata);
-  const char* userprofile = std::getenv("USERPROFILE");
+  const char* userprofile = safe_getenv("USERPROFILE");
   if (userprofile != nullptr && *userprofile != '\0') return std::filesystem::path(userprofile) / "AppData" / "Roaming";
   return std::nullopt;
 #else
-  const char* home = std::getenv("HOME");
+  const char* home = safe_getenv("HOME");
   if (home != nullptr && *home != '\0') return std::filesystem::path(home);
   return std::nullopt;
 #endif

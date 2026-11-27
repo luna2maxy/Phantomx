@@ -7,7 +7,11 @@
 #include <thread>
 #include <utility>
 
+#ifdef _WIN32
+#include <process.h>
+#else
 #include <unistd.h>
+#endif
 
 namespace phantomx::db {
 namespace {
@@ -59,7 +63,11 @@ void emit_conn_event_global(std::uint64_t conn_id, std::uint64_t open_attempt_id
   ev.connection_id = conn_id;
   ev.open_attempt_id = open_attempt_id;
   ev.lifecycle_generation = generation;
+#ifdef _WIN32
+  ev.process_id = static_cast<std::uint64_t>(_getpid());
+#else
   ev.process_id = static_cast<std::uint64_t>(::getpid());
+#endif
   ev.thread_id = static_cast<std::uint64_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
   ev.database_role = role;
   ev.stage = stage ? stage : "";

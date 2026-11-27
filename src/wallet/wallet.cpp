@@ -20,9 +20,21 @@ namespace {
 
 constexpr const char* kDefaultAccount = "default";
 
+inline const char* safe_getenv(const char* name) {
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#endif
+  const char* value = std::getenv(name);
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+  return value;
+}
+
 std::string resolve_rpc_token(const std::string& configured) {
   if (!configured.empty()) return configured;
-  if (const char* env = std::getenv("PHANTOMX_RPC_TOKEN"); env != nullptr && *env != '\0') return std::string(env);
+  if (const char* env = safe_getenv("PHANTOMX_RPC_TOKEN"); env != nullptr && *env != '\0') return std::string(env);
   return {};
 }
 
