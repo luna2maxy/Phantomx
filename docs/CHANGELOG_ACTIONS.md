@@ -15,6 +15,26 @@ Entry format (always write entries in **English** — see `docs/DEVELOPMENT.md`)
 
 ---
 
+## 2026-11-27 — Widen Qt wallet Settings content area
+
+- **Time (UTC):** 2026-11-27T14:08:35Z
+- **Action:**
+  - Replaced the narrow 720px centered Settings column with a left-aligned container anchored `Theme.pageMargin` (24px) from both sides of the main area, using roughly 95% of available width on a standard window.
+  - Removed the horizontal centering and vertical-centering offsets; content now starts near the top-left after the sidebar, with no large empty gutters on the right.
+  - Kept a consistent two-column form grid: responsive label column (`min(180, max(72, 22% of container))`) and a fill-width control column. Treasury, Datadir, and Node RPC inputs now expand with the container.
+  - Added `Layout.minimumWidth: 0` to fill-width controls so window shrinking does not cause horizontal overflow.
+  - Import/Backup buttons remain compact (`size: "S"`) and do not stretch with the input column; Apply Settings stays proportional (`size: "M"`).
+  - This supersedes the previous centered-column entry while preserving every existing handler and component.
+- **Reason/Request:** User: "Fix the Settings layout again: the current design is too centered with large empty space on both sides. Use a wider, proportional layout that fills 90-95% of the available area, keeps compact Import/Backup buttons, and stays responsive without horizontal overflow."
+- **Files changed:** `apps/phantomx-qt/qml/pages/SettingsPage.qml`, `docs/DESKTOP_WALLET.md`, `docs/CHANGELOG_ACTIONS.md`.
+- **Verification:**
+  - `cmake --build build --target phantomx-qt -j$(nproc)` → success; `SettingsPage.qml` was recompiled into the Qt resource and QML cache.
+  - `qmllint` on `SettingsPage.qml` → no syntax errors.
+  - `QT_QPA_PLATFORM=offscreen timeout 5 ./build/bin/phantomx-qt` → no QML/runtime errors in output (exit `124` is the expected timeout for the long-running GUI).
+  - `ctest --test-dir build --output-on-failure -j4` → **11/11 passed**.
+  - `git diff --check` → clean.
+  - Diff of `walletBridge.*` invocations → unchanged; no logic, RPC, keystore, or transaction code was modified.
+
 ## 2026-11-27 — Refine Qt wallet Settings layout and balance-card spacing
 
 - **Time (UTC):** 2026-11-27T14:04:50Z

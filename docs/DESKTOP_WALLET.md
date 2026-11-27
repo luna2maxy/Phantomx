@@ -46,7 +46,7 @@ Binary: `build-ubuntu/bin/phantomx-qt`
 - **Receive**: treasury address, Generate New Address, Generate 5 Addresses (one keystore, many addresses).
 - **Transactions**: transaction/UTXO table.
 - **PoI**: Start/Stop, bandwidth, domain, score/epoch, status.
-- **Settings**: centered, responsive settings column with compact keystore import/backup buttons; wallet management (create/open, import keystore file via file browser, backup keystore via save dialog, treasury) and node/network config.
+- **Settings**: wide, left-aligned responsive column using roughly 95% of the main area with 24px padding; compact keystore import/backup buttons; wallet management (create/open, import keystore file via file browser, backup keystore via save dialog, treasury) and node/network config.
 
 ## Security
 
