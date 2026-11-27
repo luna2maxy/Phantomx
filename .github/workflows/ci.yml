@@ -115,10 +115,99 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  build-qt:
+    name: qt-${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows-x64-release
+            os: windows-latest
+            preset: windows-msvc-release
+          - name: linux-x86_64-release
+            os: ubuntu-latest
+            preset: linux-gcc-release
+          - name: linux-arm64-release
+            os: ubuntu-24.04-arm
+            preset: linux-gcc-release
+          - name: macos-intel-release
+            os: macos-15-intel
+            preset: macos-clang-release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libsodium-dev libsqlite3-dev libjansson-dev libcurl4-openssl-dev \
+            libgl1-mesa-dev libxkbcommon-dev libxcb-xinerama0-dev libxcb-cursor-dev
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ninja libsodium sqlite3 jansson curl
+
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install ninja -y
+          vcpkg install libsodium:x64-windows sqlite3:x64-windows jansson:x64-windows curl:x64-windows
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.*'
+          cache: true
+
+      - name: Setup MSVC dev environment
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        run: cmake --preset ${{ matrix.preset }} -DPHANTOMX_BUILD_QT=ON -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows
+
+      - name: Configure (Unix)
+        if: runner.os != 'Windows'
+        run: cmake --preset ${{ matrix.preset }} -DPHANTOMX_BUILD_QT=ON
+
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }} --parallel
+
+      - name: Package Qt artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="dist/qt-${{ matrix.name }}"
+          mkdir -p "$OUT"
+          BIN_DIR="build/${{ matrix.preset }}/bin"
+          if [ -d "$BIN_DIR" ]; then
+            cp -a "$BIN_DIR"/. "$OUT"/
+          fi
+          ls -la "$OUT" || true
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            7z a "dist/qt-${{ matrix.name }}.zip" "./$OUT/*"
+          else
+            tar -C dist -czf "dist/qt-${{ matrix.name }}.tar.gz" "qt-${{ matrix.name }}"
+          fi
+
+      - name: Upload Qt artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: qt-${{ matrix.name }}
+          path: dist/qt-${{ matrix.name }}.*
+          if-no-files-found: error
+          retention-days: 14
+
   artifacts-summary:
     name: artifacts-summary
     runs-on: ubuntu-latest
-    needs: build-test
+    needs: [build-test, build-qt]
     if: always()
     steps:
       - name: Write download summary
@@ -133,7 +222,7 @@ jobs:
             echo "- **Run page:** ${RUN_URL}"
             echo "- **Artifacts section:** ${RUN_URL}#artifacts"
             echo ""
-            echo "Artifacts produced by matrix jobs:"
+            echo "### Core builds"
             echo ""
             echo "| Build | Artifact |"
             echo "|---|---|"
@@ -145,4 +234,13 @@ jobs:
             echo "| linux-arm64-release | \`linux-arm64-release\` |"
             echo "| macos-intel-debug | \`macos-intel-debug\` |"
             echo "| macos-intel-release | \`macos-intel-release\` |"
+            echo ""
+            echo "### Qt builds"
+            echo ""
+            echo "| Build | Artifact |"
+            echo "|---|---|"
+            echo "| qt-windows-x64-release | \`qt-windows-x64-release\` |"
+            echo "| qt-linux-x86_64-release | \`qt-linux-x86_64-release\` |"
+            echo "| qt-linux-arm64-release | \`qt-linux-arm64-release\` |"
+            echo "| qt-macos-intel-release | \`qt-macos-intel-release\` |"
           } >> "$GITHUB_STEP_SUMMARY"
