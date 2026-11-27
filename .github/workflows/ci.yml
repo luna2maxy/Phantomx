@@ -117,7 +117,14 @@ jobs:
           OUT="dist/${{ matrix.name }}"
           mkdir -p "$OUT"
           BIN_DIR="build/${{ matrix.preset }}/bin"
-          if [ -d "$BIN_DIR" ]; then
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            # Windows core zip: executables only, no runtime DLLs or extra files.
+            for exe in phantomxd phantomx-cli phantomx-poi phantomx-wallet phantomx-pool; do
+              if [ -f "$BIN_DIR/$exe.exe" ]; then
+                cp "$BIN_DIR/$exe.exe" "$OUT/"
+              fi
+            done
+          elif [ -d "$BIN_DIR" ]; then
             cp -a "$BIN_DIR"/. "$OUT"/
           fi
           # Include key build outputs if present
@@ -175,7 +182,7 @@ jobs:
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
-          choco install ninja -y
+          choco install ninja nsis -y
           vcpkg install libsodium:x64-windows sqlite3:x64-windows jansson:x64-windows curl:x64-windows
 
       - name: Install Qt
@@ -207,9 +214,15 @@ jobs:
         run: |
           $binDir = "build/${{ matrix.preset }}/bin"
           $exe = Join-Path $binDir "phantomx-qt.exe"
-          if (Test-Path $exe) {
-            windeployqt --release --qmldir apps/phantomx-qt/qml --dir $binDir $exe
+          if (-not (Test-Path $exe)) {
+            throw "phantomx-qt.exe not found at $exe"
           }
+          $stageDir = Join-Path $PWD "dist/qt-windows-stage"
+          New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
+          Copy-Item $exe $stageDir
+          # Runtime DLLs produced by vcpkg applocal (libsodium, jansson, curl, sqlite3, ...).
+          Copy-Item (Join-Path $binDir "*.dll") $stageDir -ErrorAction SilentlyContinue
+          windeployqt --release --qmldir apps/phantomx-qt/qml --dir $stageDir (Join-Path $stageDir "phantomx-qt.exe")
 
       - name: Deploy Qt runtime (macOS)
         if: runner.os == 'macOS'
@@ -224,7 +237,19 @@ jobs:
             macdeployqt "$BIN_DIR/phantomx-qt" -qmldir=apps/phantomx-qt/qml -verbose=1 || true
           fi
 
-      - name: Package Qt artifacts
+      - name: Package Qt installer (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $stageDir = Join-Path $PWD "dist/qt-windows-stage"
+          $outFile = Join-Path $PWD "dist/qt-${{ matrix.name }}-setup.exe"
+          makensis -DSTAGE_DIR="$stageDir" -DOUT_FILE="$outFile" deploy\windows\phantomx-qt.nsi
+          if (-not (Test-Path $outFile)) {
+            throw "Installer not produced: $outFile"
+          }
+
+      - name: Package Qt artifacts (Unix)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           set -euo pipefail
@@ -235,17 +260,15 @@ jobs:
             cp -a "$BIN_DIR"/. "$OUT"/
           fi
           ls -la "$OUT" || true
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            7z a "dist/qt-${{ matrix.name }}.zip" "./$OUT/*"
-          else
-            tar -C dist -czf "dist/qt-${{ matrix.name }}.tar.gz" "qt-${{ matrix.name }}"
-          fi
+          tar -C dist -czf "dist/qt-${{ matrix.name }}.tar.gz" "qt-${{ matrix.name }}"
 
       - name: Upload Qt artifacts
         uses: actions/upload-artifact@v4
         with:
           name: qt-${{ matrix.name }}
-          path: dist/qt-${{ matrix.name }}.*
+          path: |
+            dist/qt-${{ matrix.name }}.*
+            dist/qt-${{ matrix.name }}-setup.exe
           if-no-files-found: error
           retention-days: 14
 
@@ -280,12 +303,14 @@ jobs:
             echo "| macos-intel-debug | \`macos-intel-debug\` |"
             echo "| macos-intel-release | \`macos-intel-release\` |"
             echo ""
+            echo "> Windows core zips contain executables only: \`phantomxd\`, \`phantomx-cli\`, \`phantomx-poi\`, \`phantomx-wallet\`, \`phantomx-pool\`."
+            echo ""
             echo "### Qt builds"
             echo ""
-            echo "| Build | Artifact |"
-            echo "|---|---|"
-            echo "| qt-windows-x64-release | \`qt-windows-x64-release\` |"
-            echo "| qt-linux-x86_64-release | \`qt-linux-x86_64-release\` |"
-            echo "| qt-linux-arm64-release | \`qt-linux-arm64-release\` |"
-            echo "| qt-macos-intel-release | \`qt-macos-intel-release\` |"
+            echo "| Build | Artifact | Contents |"
+            echo "|---|---|---|"
+            echo "| qt-windows-x64-release | \`qt-windows-x64-release\` | Windows installer (\`.exe\`) |"
+            echo "| qt-linux-x86_64-release | \`qt-linux-x86_64-release\` | \`.tar.gz\` |"
+            echo "| qt-linux-arm64-release | \`qt-linux-arm64-release\` | \`.tar.gz\` |"
+            echo "| qt-macos-intel-release | \`qt-macos-intel-release\` | \`.tar.gz\` |"
           } >> "$GITHUB_STEP_SUMMARY"
