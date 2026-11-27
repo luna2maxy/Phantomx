@@ -243,7 +243,26 @@ jobs:
         run: |
           $stageDir = Join-Path $PWD "dist/qt-windows-stage"
           $outFile = Join-Path $PWD "dist/qt-${{ matrix.name }}-setup.exe"
-          makensis -DSTAGE_DIR="$stageDir" -DOUT_FILE="$outFile" deploy\windows\phantomx-qt.nsi
+          # NSIS is preinstalled on GitHub runners, but makensis is not always on
+          # PATH (Chocolatey skips creating a shim when the package is already
+          # present), so locate the executable explicitly.
+          $makensis = (Get-Command makensis.exe -ErrorAction SilentlyContinue).Source
+          if (-not $makensis) {
+            $searchRoots = @(
+              "C:\Program Files (x86)\NSIS",
+              "C:\Program Files\NSIS",
+              "C:\ProgramData\chocolatey\lib\nsis"
+            )
+            $makensis = Get-ChildItem -Path $searchRoots -Filter makensis.exe -Recurse -ErrorAction SilentlyContinue |
+              Select-Object -First 1 -ExpandProperty FullName
+          }
+          if (-not $makensis) {
+            throw "makensis not found; install NSIS or add it to PATH"
+          }
+          & $makensis "/DSTAGE_DIR=$stageDir" "/DOUT_FILE=$outFile" "deploy\windows\phantomx-qt.nsi"
+          if ($LASTEXITCODE -ne 0) {
+            throw "makensis failed with exit code $LASTEXITCODE"
+          }
           if (-not (Test-Path $outFile)) {
             throw "Installer not produced: $outFile"
           }
