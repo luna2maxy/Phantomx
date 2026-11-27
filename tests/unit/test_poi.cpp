@@ -1,11 +1,17 @@
 #include <array>
 #include <cmath>
+#include <cstdlib>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <limits>
 #include <random>
 #include <vector>
+
+#ifdef _WIN32
+static inline int setenv(const char* name, const char* value, int /*overwrite*/) { return _putenv_s(name, value); }
+static inline int unsetenv(const char* name) { return _putenv_s(name, ""); }
+#endif
 
 #include "../test_framework.hpp"
 #include "phantomx/aggregator/aggregator.hpp"
@@ -913,7 +919,7 @@ PHX_TEST(ptm015c2_pop_v1_vector_and_mutation) {
         if(in[off+static_cast<size_t>(i)] != static_cast<std::uint8_t>(magic[i])) return false;
       }
       off+=10;
-      auto u16=[&](uint16_t& v)->bool{ if(off+2>in.size()) return false; v=static_cast<uint16_t>(in[off])|(static_cast<uint16_t>(in[off+1])<<8); off+=2; return true; };
+      auto u16=[&](uint16_t& v)->bool{ if(off+2>in.size()) return false; v=static_cast<uint16_t>(static_cast<uint16_t>(in[off])|(static_cast<uint16_t>(in[off+1])<<8)); off+=2; return true; };
       auto u64=[&](uint64_t& v)->bool{ if(off+8>in.size()) return false; v=0; for(int i=0;i<8;++i) v|=(static_cast<uint64_t>(in[off+static_cast<size_t>(i)])<<(8*i)); off+=8; return true; };
       uint16_t ver=0, proto=0, vid_len=0, owner_len=0;
       if(!u16(ver)||ver!=1) return false;

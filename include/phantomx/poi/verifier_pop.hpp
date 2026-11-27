@@ -29,7 +29,7 @@ inline std::uint8_t pop_network_u8(phantomx::Network n) {
 
 inline void pop_push_u16_le(std::vector<std::uint8_t>& out, std::uint16_t v){ out.push_back(static_cast<std::uint8_t>(v&0xFF)); out.push_back(static_cast<std::uint8_t>((v>>8)&0xFF)); }
 inline void pop_push_u64_le(std::vector<std::uint8_t>& out, std::uint64_t v){ for(int i=0;i<8;++i) out.push_back(static_cast<std::uint8_t>((v>>(8*i))&0xFF)); }
-inline bool pop_read_u16_le(const std::vector<std::uint8_t>& in, size_t& off, std::uint16_t& v){ if(off+2>in.size()) return false; v=static_cast<std::uint16_t>(in[off])| (static_cast<std::uint16_t>(in[off+1])<<8); off+=2; return true; }
+inline bool pop_read_u16_le(const std::vector<std::uint8_t>& in, size_t& off, std::uint16_t& v){ if(off+2>in.size()) return false; v=static_cast<std::uint16_t>(static_cast<std::uint16_t>(in[off]) | (static_cast<std::uint16_t>(in[off+1]) << 8)); off+=2; return true; }
 inline bool pop_read_u64_le(const std::vector<std::uint8_t>& in, size_t& off, std::uint64_t& v){ if(off+8>in.size()) return false; v=0; for(int i=0;i<8;++i) v |= (static_cast<std::uint64_t>(in[off+static_cast<size_t>(i)])<<(8*i)); off+=8; return true; }
 
 inline bool encode_pop_payload_v1(const PopPayloadFieldsV1& f, std::vector<std::uint8_t>& out){

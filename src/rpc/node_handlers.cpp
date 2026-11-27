@@ -261,7 +261,7 @@ static Result<void> poi_verify_identity_claim(const std::unordered_map<std::stri
 }
 
 
-constexpr double kPoiMRef = phantomx::poi::kPoiMRef;
+[[maybe_unused]] constexpr double kPoiMRef = phantomx::poi::kPoiMRef;
 constexpr double kPoiKEpoch = 10.0;
 constexpr std::uint64_t kPoiHeartbeatWindowSec = 600; // liveness window
 constexpr std::uint64_t kPoiHeartbeatIntervalSec = 60;
@@ -1298,7 +1298,7 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
     r.id = req.id; return r;
   });
 
-  server.register_method("verifier_register", [&chain, load_verifiers, save_verifiers, network, verifier_challenge_key, decode_pop_payload_v1, pop_network_u8](const RpcRequest& req) {
+  server.register_method("verifier_register", [&chain, load_verifiers, save_verifiers, network, decode_pop_payload_v1, pop_network_u8](const RpcRequest& req) {
     auto idIt = req.params.find("id");
     auto addrIt = req.params.find("address");
     auto epIt = req.params.find("endpoint");
@@ -1411,7 +1411,7 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
     return ok(req.id, {{"status", "registered"}, {"verifier_json", vjson}, {"address_validated", "true"}, {"pop_verified","true"}});
   });
 
-  server.register_method("verifier_heartbeat", [&chain, load_verifiers, save_verifiers, verifier_online](const RpcRequest& req) {
+  server.register_method("verifier_heartbeat", [load_verifiers, save_verifiers, verifier_online](const RpcRequest& req) {
     auto idIt = req.params.find("id");
     auto addrIt = req.params.find("address");
     if (idIt == req.params.end() && addrIt == req.params.end())
@@ -1510,7 +1510,7 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
     return ok(req.id, {{"verifiers_json", vjson}, {"count", std::to_string(count)}});
   });
 
-  server.register_method("poi_submit_attestation", [&, p2p, aggregator_state_path, aggregator_db_path, load_verifiers, save_poi_attestations, poi_attestation_message_v1, poi_attestation_message_v2, poi_verify_attestation_sig, poi_try_finalize, count_online_verifiers, poi_required_quorum](const RpcRequest& req) {
+  server.register_method("poi_submit_attestation", [&, p2p, aggregator_state_path, aggregator_db_path, load_verifiers, save_poi_attestations, poi_attestation_message_v1, poi_attestation_message_v2, poi_verify_attestation_sig](const RpcRequest& req) {
     auto bhIt = req.params.find("block_hash");
     auto pkIt = req.params.find("verifier_pubkey");
     auto sigIt = req.params.find("signature");
@@ -2236,7 +2236,7 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
     return ok(req.id, {{"found","true"},{"amount_atoms",std::to_string(e.amount_atoms)},{"coinbase",e.coinbase?"true":"false"},{"height",std::to_string(e.height)}});
   });
 
-  server.register_method("getrawtransaction", [&chain, &mempool, parse_id32](const RpcRequest& req) {
+  server.register_method("getrawtransaction", [&mempool, parse_id32](const RpcRequest& req) {
     auto h = req.params.find("txid"); if (h == req.params.end()) return err(req.id, RpcErrorCode::kInvalidParams, "missing txid");
     Hash256Bytes txh{}; if (!parse_id32(h->second, txh)) return err(req.id, RpcErrorCode::kInvalidParams, "invalid txid");
     if (mempool.contains(txh)) {
@@ -2880,7 +2880,7 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
     if (!bft) return ok(req.id, {{"status","bft_disabled"}});
     return ok(req.id, {{"status","foundation"},{"beacon",""},{"warning","randomness beacon unavailable"}});
   });
-  server.register_method("bft_submit_vote", [bft,p2p,parse_id32](const RpcRequest& req) {
+  server.register_method("bft_submit_vote", [bft,parse_id32](const RpcRequest& req) {
     if (!bft) return err(req.id, RpcErrorCode::kInternalError, "bft disabled");
     auto gp=[&](const char* k)->const std::string*{ auto it=req.params.find(k); return it==req.params.end()?nullptr:&it->second; };
     const auto *ph=gp("phase"),*ep=gp("epoch"),*vw=gp("view"),*ht=gp("height"),*bh=gp("block_hash"),*pk=gp("validator_pubkey"),*vp=gp("voting_power"),*sg=gp("signature");
@@ -3003,7 +3003,7 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
   // modulated by epoch/score (target_block_interval_ms).
   bool expected = false;
   if (g_poi_producer_started.compare_exchange_strong(expected, true)) {
-    std::thread([&chain, &mempool, p2p, mine_one, save_poi_attestations, count_online_verifiers, poi_required_quorum]() mutable {
+    std::thread([&chain, p2p, mine_one, save_poi_attestations, count_online_verifiers, poi_required_quorum]() mutable {
       using namespace std::chrono_literals;
       std::uint64_t last_produced_ms = 0;
       std::uint64_t last_rebroadcast_ms = 0;

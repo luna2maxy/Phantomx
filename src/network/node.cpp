@@ -55,7 +55,7 @@ bool set_recv_timeout(socket_t s, std::uint32_t ms) {
 #else
   timeval tv{};
   tv.tv_sec = static_cast<long>(ms / 1000);
-  tv.tv_usec = static_cast<long>((ms % 1000) * 1000);
+  tv.tv_usec = static_cast<decltype(tv.tv_usec)>((ms % 1000) * 1000);
   return setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) == 0;
 #endif
 }
