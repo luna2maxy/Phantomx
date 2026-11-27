@@ -12,13 +12,14 @@
 
 namespace phantomx::rewards {
 
-inline constexpr std::uint64_t kPoiShareBps = 70000;      // 70%
-inline constexpr std::uint64_t kVerifierShareBps = 20000;  // 20%
-inline constexpr std::uint64_t kPoolShareBps = 10000;      // 10%
+// Master plan: PoI contributors 90%, verifier operators 10%, no pool category.
+inline constexpr std::uint64_t kPoiShareBps = 90000;       // 90%
+inline constexpr std::uint64_t kVerifierShareBps = 10000;  // 10%
 inline constexpr std::uint64_t kBpsDenom = 100000;
+static_assert(kPoiShareBps + kVerifierShareBps == kBpsDenom, "reward shares must sum to 100%");
 
 struct EpochParticipant {
-  std::array<std::uint8_t, 32> id{}; // node/verifier/pool identity pubkey
+  std::array<std::uint8_t, 32> id{}; // PoI contributor / verifier identity pubkey
   std::uint64_t work_units = 0;      // fixed-point or integer units, deterministic
 };
 
@@ -28,14 +29,13 @@ struct EpochSnapshot {
   std::uint64_t end_height = 0;
   std::vector<EpochParticipant> poi_contributors;
   std::vector<EpochParticipant> verifier_operators;
-  std::vector<EpochParticipant> pool_operators;
   std::uint64_t total_subsidy_atoms = 0;
 };
 
 struct RewardEntry {
   std::array<std::uint8_t, 32> recipient_id{};
   std::uint64_t amount_atoms = 0;
-  std::string category; // "poi", "verifier", "pool"
+  std::string category; // "poi" or "verifier"
 };
 
 struct RewardCommitment {
@@ -57,6 +57,11 @@ struct RewardClaim {
   std::string category;
   std::vector<ClaimProofStep> merkle_proof;
 };
+
+// Overflow-safe (a * b) / c for consensus-critical integer arithmetic.
+[[nodiscard]] std::uint64_t mul_div_u64(std::uint64_t a, std::uint64_t b, std::uint64_t c);
+// Floor of `total_atoms` * `bps` / 100000, without 64-bit overflow.
+[[nodiscard]] std::uint64_t bps_share(std::uint64_t total_atoms, std::uint64_t bps);
 
 [[nodiscard]] std::uint64_t block_subsidy_atoms(std::uint64_t height);
 [[nodiscard]] std::uint64_t total_minted_atoms_through_height(std::uint64_t height);

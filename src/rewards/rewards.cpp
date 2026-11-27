@@ -26,6 +26,8 @@ Hash256Bytes hash_pair(const Hash256Bytes& a, const Hash256Bytes& b) {
   return sha256d(std::span<const std::uint8_t>(buf.data(), buf.size()));
 }
 
+}  // namespace
+
 std::uint64_t mul_div_u64(std::uint64_t a, std::uint64_t b, std::uint64_t c) {
   if (c == 0) return 0;
 #if defined(__SIZEOF_INT128__)
@@ -65,6 +67,12 @@ std::uint64_t mul_div_u64(std::uint64_t a, std::uint64_t b, std::uint64_t c) {
   return q;
 #endif
 }
+
+std::uint64_t bps_share(std::uint64_t total_atoms, std::uint64_t bps) {
+  return mul_div_u64(total_atoms, bps, kBpsDenom);
+}
+
+namespace {
 
 std::vector<EpochParticipant> canonicalize(std::vector<EpochParticipant> v) {
   v.erase(std::remove_if(v.begin(), v.end(), [](const EpochParticipant& p) {
@@ -146,18 +154,17 @@ std::vector<RewardEntry> calculate_epoch_rewards(const EpochSnapshot& snapshot) 
   const std::uint64_t total = snapshot.total_subsidy_atoms;
   if (total == 0) return out;
 
-  // Integer BPS split: floor for verifier/pool, PoI gets remainder to ensure sum == total.
-  const std::uint64_t verifier_atoms = (total * kVerifierShareBps) / kBpsDenom;
-  const std::uint64_t pool_atoms = (total * kPoolShareBps) / kBpsDenom;
-  const std::uint64_t poi_atoms = total - verifier_atoms - pool_atoms;
+  // Integer BPS split: verifier gets floor(total * 10 / 100); PoI gets the
+  // remainder (90% plus rounding dust) so the epoch sum stays exact and no
+  // pool category exists in the master plan.
+  const std::uint64_t verifier_atoms = bps_share(total, kVerifierShareBps);
+  const std::uint64_t poi_atoms = total - verifier_atoms;
 
   auto poi = canonicalize(snapshot.poi_contributors);
   auto ver = canonicalize(snapshot.verifier_operators);
-  auto pool = canonicalize(snapshot.pool_operators);
 
   distribute_category(out, poi, poi_atoms, "poi");
   distribute_category(out, ver, verifier_atoms, "verifier");
-  distribute_category(out, pool, pool_atoms, "pool");
 
   // Canonical final ordering for deterministic commitment
   std::sort(out.begin(), out.end(), [](const RewardEntry& a, const RewardEntry& b) {

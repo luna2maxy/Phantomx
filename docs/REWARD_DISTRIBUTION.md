@@ -12,25 +12,26 @@ Per epoch snapshot:
 - `total_subsidy_atoms` (sum of block subsidies in epoch, integer atoms)
 - PoI contributor work units
 - Verifier operator work units
-- Pool operator work units
 
 All work units must be deterministically derived from validated evidence/consensus records.
 
 ## Category Split
 
-Total subsidy is split by integer basis points:
+Total subsidy is split by integer basis points (master plan, no pool category):
 
-- PoI contributors: `70,000 / 100,000`
-- Verifier operators: `20,000 / 100,000`
-- Pool operators: `10,000 / 100,000`
+- PoI contributors: `90,000 / 100,000`
+- Verifier operators: `10,000 / 100,000`
 
 Calculation:
 
-- `verifier_atoms = floor(total * 20000 / 100000)`
-- `pool_atoms = floor(total * 10000 / 100000)`
-- `poi_atoms = total - verifier_atoms - pool_atoms`
+- `verifier_atoms = floor(total * 10000 / 100000)`
+- `poi_atoms = total - verifier_atoms`
 
-This ensures the sum equals total subsidy with no floating point.
+All multiplication uses the overflow-safe `mul_div_u64()` / `bps_share()` helpers
+(`__uint128_t`, `_umul128`/`_udiv128` on MSVC, or a portable 128-bit fallback),
+so large epoch totals cannot wrap the 64-bit atom counter. PoI receives the
+remainder, so the sum always equals the total subsidy with no floating point and
+no lost atoms.
 
 ## Proportional Distribution
 
@@ -89,6 +90,8 @@ Required test coverage:
 - Block after halving
 - Repeated halving
 - Reward rounding
+- Large epoch totals above the 64-bit multiplication overflow threshold
+- No pool category emitted
 - Zero reward
 - Maximum supply cap
 - Invalid reward claim / double claim prevention

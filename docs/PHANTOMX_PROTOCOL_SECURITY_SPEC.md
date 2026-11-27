@@ -290,8 +290,9 @@ PoI affects consensus only through finalized, verifiable records:
 
 ### 8.1 Budget
 - Block subsidy from `rewards::block_subsidy_atoms(height)`.
-- Split: PoI contributors 70%, verifier operators 20%, pool operators 10% (current constants; any change requires governance + spec version bump).
-- Remainder from rounding MUST be handled deterministically (burn-to-fee-pool/treasury/carry) by explicit rule; no silent inflation.
+- Split: PoI contributors 90%, verifier operators 10% (master plan; no pool operator subsidy category). Any change requires governance + spec version bump.
+- Remainder from rounding goes to the PoI contributor bucket; the epoch sum is exact, with no silent inflation.
+- Share arithmetic MUST use overflow-safe `mul_div_u64()` / `bps_share()`; a plain `(total * bps) / denom` wraps above ~9.22e14 atoms.
 
 ### 8.2 PoI Weight
 For each finalized machine record in epoch:
@@ -318,7 +319,7 @@ Settlement MUST be on-chain and replay-verifiable. Two acceptable implementation
 ```text
 PoiSettlementV1 {
   version, epoch, finalized_height, poi_records_root,
-  reward_budget_atoms, poi_pool_atoms, verifier_pool_atoms, pool_ops_atoms,
+  reward_budget_atoms, poi_pool_atoms, verifier_pool_atoms,
   payouts_root, slashes_root, unissued_atoms, rule_hash, signature_or_qc_ref
 }
 ```

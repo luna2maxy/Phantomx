@@ -2,6 +2,6 @@
 
 ## Unreleased
 - Prompt 01 audit/docs: storage scope removed, verifier/aggregator/threat/roadmap docs added.
-- Reward split aligned in code/config/tests to 70/20/10 (Contributor/Verifier/Pool Operator) per prompt.txt target.
-- Tests: 12/12 CTest pass in `build/dev` on 2026-11-23 (not a release guarantee).
+- Reward split aligned in code/config/tests to master plan 90% PoI Contributor / 10% Verifier, no pool subsidy category; overflow-safe BPS math.
+- Tests: 11/11 CTest pass in `build` and `build-asan` on 2026-11-27; 141/141 unit tests pass (not a release guarantee).
 - Status: NO-GO for mainnet.

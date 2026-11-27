@@ -10,7 +10,7 @@ Aligned to `prompt.txt` (Prompt 01-14). This roadmap tracks implementation phase
 - [x] Baseline build/test run recorded (12/12 PASS in build/dev at audit time).
 - [x] Storage code remnants removed/disabled (VerifierType storage/both, PoolRole storage, KeyRole storage, storage role mapping).
 - [x] Major storage-subsystem references removed/patched in code/docs; remaining historical diagram/text cleanup tracked.
-- [ ] Finalize tokenomics decision: prompt specifies 70/20/10; current code is 90/10 + pool fee separate. Reconcile code/docs/config/tests (tracked, Prompt 10).
+- [x] Tokenomics decision finalized: master plan is 90% PoI contributors / 10% verifiers, no pool subsidy category. Code/docs/config/tests reconciled.
 - [x] Created/refreshed: VERIFIER_PROTOCOL, AGGREGATOR_PROTOCOL, THREAT_MODEL, ROADMAP, PROMPT01_AUDIT_REPORT; updated ARCHITECTURE/CONSENSUS/PROOF_OF_INTERNET/TOKENOMICS/KNOWN_LIMITATIONS partially.
 
 ## Phase 2 — Core Foundation (Prompt 02)
@@ -52,7 +52,7 @@ Aligned to `prompt.txt` (Prompt 01-14). This roadmap tracks implementation phase
 - [ ] Remaining: full pacemaker network round sync, crash-safe WAL vote/QC store, unbiased production randomness, slashing/governance enforcement, BftEngine<->P2PNode daemon wiring, full Byzantine/partition/long-running cluster suite.
 
 ## Phase 10 — Rewards & Epoch Settlement (Prompt 10)
-- [x] Reward split aligned to 70/20/10 in code/config/tests; deterministic integer math, halving, claim Merkle/ClaimRegistry present.
+- [x] Reward split aligned to 90/10 (no pool) in code/config/tests; deterministic overflow-safe integer math, halving, claim Merkle/ClaimRegistry present.
 - [ ] Full on-chain epoch settlement, persistent claim nullifiers, duplicate payout prevention across restarts, complete accounting audit remain.
 
 ## Phase 11 — RPC & CLI (Prompt 11)

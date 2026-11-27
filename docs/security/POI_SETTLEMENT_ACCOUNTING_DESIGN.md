@@ -10,7 +10,7 @@
 
 ## Inputs (must be finalized/verified)
 - Finalized PoI records: `PoiRecordV1` (see protocol spec §3).
-- Epoch budget: `rewards::block_subsidy_atoms(height)` split 70/20/10.
+- Epoch budget: `rewards::block_subsidy_atoms(height)` split 90/10 (PoI / verifier; no pool category).
 - Identity registry state: active owner/machine bindings.
 
 ## Accounting Keys
@@ -29,7 +29,7 @@
 ```text
 PoiSettlementV1 {
   version, epoch, finalized_height, poi_records_root,
-  reward_budget_atoms, poi_pool_atoms, verifier_pool_atoms, pool_ops_atoms,
+  reward_budget_atoms, poi_pool_atoms, verifier_pool_atoms,
   payouts_root, slashes_root, unissued_atoms, rule_hash
 }
 ```

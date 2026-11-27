@@ -118,11 +118,16 @@ For each block subsidy `S`:
 
 | Recipient class | Share | Amount |
 |---|---:|---|
-| PoI contributors | 70% | `S * 70 / 100` |
-| Verifier operators | 20% | `S * 20 / 100` |
-| Pool operators | 10% | `S * 10 / 100` |
+| PoI contributors | 90% | `S - verifier_atoms` |
+| Verifier operators | 10% | `floor(S * 10000 / 100000)` |
 
-**Rounding rule:** integer division in phx_atom; remainder assigned deterministically (recommendation: to PoI contributors bucket, then verifiers, then pools by fixed order) and recorded in block accounting. Consensus tests must cover remainder cases.
+There is no pool operator subsidy category; pool fees are a separate off-chain
+arrangement paid out of the PoI contributor share.
+
+**Rounding rule:** integer division in phx_atom via overflow-safe `bps_share()`;
+verifier share is floored and the remainder goes to PoI contributors. This keeps
+the total exact. Consensus tests must cover remainder cases and large epoch
+totals above the 64-bit multiplication overflow threshold.
 
 ### 4.5 Storage Fees
 

@@ -31,9 +31,8 @@
     "theoretical_max_supply_atoms": 10500000000000000,
     "premine_atoms": 0,
     "subsidy_split": {
-      "poi_contributors_percent": 70,
-      "verifier_operators_percent": 20,
-      "pool_operators_percent": 10
+      "poi_contributors_percent": 90,
+      "verifier_operators_percent": 10
     }
   },
   "genesis": {

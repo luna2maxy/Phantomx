@@ -27,11 +27,12 @@ PhantomX (PHX) is a C++20 blockchain implementation with a transparent UTXO ledg
 
 PhantomX separates contribution measurement, verification, aggregation, consensus, settlement, and wallet operations. PoI affects contribution scoring and participation eligibility; it does not independently provide Sybil resistance or determine verifier attestation/quorum policy.
 
-Reward distribution:
+Reward distribution (master plan):
 
-- 70% Contributor
-- 20% Verifier
-- 10% Pool Operator
+- 90% PoI Contributor
+- 10% Verifier
+
+There is no pool operator subsidy category. Pools may charge workers a separate off-chain fee out of the PoI contributor share.
 
 Initial block reward: 25 PHX. Halving interval: 2,100,000 blocks.
 

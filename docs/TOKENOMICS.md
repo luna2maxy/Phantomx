@@ -26,9 +26,11 @@ Block subsidy is distributed as:
 
 | Recipient | Share |
 |---|---:|
-| PoI contributors | 70% |
-| Verifier operators | 20% |
-| Pool operators | 10% |
+| PoI contributors | 90% |
+| Verifier operators | 10% |
+
+There is no pool operator share of the block subsidy. Pool operators may charge
+workers a separate off-chain fee taken from the PoI contributor share.
 
 Storage providers are paid from **user storage fees**, not block subsidy. There is no additional storage emission without a new tokenomics decision.
 
@@ -39,12 +41,11 @@ Rewards are settled by epoch:
 1. **Epoch snapshot** - capture epoch boundaries, participants, and work units.
 2. **Score aggregation** - aggregate PoI contribution scores/units.
 3. **Verifier work aggregation** - aggregate verified work units.
-4. **Pool work aggregation** - aggregate pool operator work units.
-5. **Reward calculation** - deterministic integer split 70/20/10, proportional by work units.
-6. **Reward commitment** - build canonical Merkle commitment/root.
-7. **Claim validation** - verify Merkle proof, epoch, recipient, amount, category.
-8. **Double claim prevention** - claim registry rejects repeated claim key.
-9. **Unclaimed reward handling** - unclaimed entries remain claimable by policy window; expired/unclaimed handling must be defined by governance/consensus policy (not auto-minted elsewhere).
+4. **Reward calculation** - deterministic integer split 90/10, proportional by work units.
+5. **Reward commitment** - build canonical Merkle commitment/root.
+6. **Claim validation** - verify Merkle proof, epoch, recipient, amount, category.
+7. **Double claim prevention** - claim registry rejects repeated claim key.
+8. **Unclaimed reward handling** - unclaimed entries remain claimable by policy window; expired/unclaimed handling must be defined by governance/consensus policy (not auto-minted elsewhere).
 
 ## Determinism Rules
 

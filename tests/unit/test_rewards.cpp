@@ -42,14 +42,13 @@ PHX_TEST(rewards_max_supply_cap) {
   PHX_EXPECT(total == 10499999976900000ULL);
 }
 
-PHX_TEST(rewards_distribution_70_20_10_and_rounding) {
+PHX_TEST(rewards_distribution_90_10_no_pool) {
   phantomx::rewards::EpochSnapshot snap;
   snap.epoch = 1;
   snap.total_subsidy_atoms = 2500000000ULL;
   snap.poi_contributors.push_back({id(1), 1});
   snap.poi_contributors.push_back({id(2), 1});
   snap.verifier_operators.push_back({id(3), 1});
-  snap.pool_operators.push_back({id(4), 1});
   auto entries = phantomx::rewards::calculate_epoch_rewards(snap);
   std::uint64_t poi = 0, ver = 0, pool = 0, total = 0;
   for (const auto& e : entries) {
@@ -59,9 +58,38 @@ PHX_TEST(rewards_distribution_70_20_10_and_rounding) {
     if (e.category == "pool") pool += e.amount_atoms;
   }
   PHX_EXPECT(total == snap.total_subsidy_atoms);
-  PHX_EXPECT(poi == 1750000000ULL);
-  PHX_EXPECT(ver == 500000000ULL);
-  PHX_EXPECT(pool == 250000000ULL);
+  PHX_EXPECT(poi == 2250000000ULL);  // 90%
+  PHX_EXPECT(ver == 250000000ULL);   // 10%
+  PHX_EXPECT(pool == 0ULL);          // no pool category in master plan
+
+  PHX_EXPECT(phantomx::rewards::kPoiShareBps == 90000);
+  PHX_EXPECT(phantomx::rewards::kVerifierShareBps == 10000);
+  PHX_EXPECT(phantomx::rewards::kPoiShareBps + phantomx::rewards::kVerifierShareBps ==
+             phantomx::rewards::kBpsDenom);
+}
+
+PHX_TEST(rewards_large_epoch_no_u64_overflow) {
+  // Regression: (total * bps) overflows uint64 above ~9.22e14 atoms.
+  constexpr std::uint64_t kLarge = 1'000'000'000'000'000ULL;  // 1e15 atoms
+  PHX_EXPECT(phantomx::rewards::bps_share(kLarge, 10000) == 100'000'000'000'000ULL);
+  PHX_EXPECT(phantomx::rewards::bps_share(kLarge, 90000) == 900'000'000'000'000ULL);
+
+  phantomx::rewards::EpochSnapshot snap;
+  snap.epoch = 7;
+  snap.total_subsidy_atoms = kLarge;
+  snap.poi_contributors.push_back({id(1), 1});
+  snap.verifier_operators.push_back({id(2), 1});
+  auto entries = phantomx::rewards::calculate_epoch_rewards(snap);
+  std::uint64_t poi = 0, ver = 0, total = 0;
+  for (const auto& e : entries) {
+    total += e.amount_atoms;
+    if (e.category == "poi") poi += e.amount_atoms;
+    if (e.category == "verifier") ver += e.amount_atoms;
+    PHX_EXPECT(e.category != "pool");
+  }
+  PHX_EXPECT(total == kLarge);
+  PHX_EXPECT(poi == 900'000'000'000'000ULL);   // remainder after 10% verifier
+  PHX_EXPECT(ver == 100'000'000'000'000ULL);
 }
 
 PHX_TEST(rewards_rounding_no_atom_loss) {
@@ -72,10 +100,12 @@ PHX_TEST(rewards_rounding_no_atom_loss) {
   snap.poi_contributors.push_back({id(2), 1});
   snap.poi_contributors.push_back({id(3), 1});
   snap.verifier_operators.push_back({id(4), 1});
-  snap.pool_operators.push_back({id(5), 1});
   auto entries = phantomx::rewards::calculate_epoch_rewards(snap);
   std::uint64_t total = 0;
-  for (const auto& e : entries) total += e.amount_atoms;
+  for (const auto& e : entries) {
+    total += e.amount_atoms;
+    PHX_EXPECT(e.category != "pool");
+  }
   PHX_EXPECT(total == 10ULL);
 }
 
@@ -85,7 +115,6 @@ PHX_TEST(rewards_claim_commitment_and_double_claim) {
   snap.total_subsidy_atoms = 2500000000ULL;
   snap.poi_contributors.push_back({id(1), 100});
   snap.verifier_operators.push_back({id(2), 100});
-  snap.pool_operators.push_back({id(3), 100});
   auto commitment = phantomx::rewards::build_reward_commitment(snap);
   PHX_EXPECT(!commitment.entries.empty());
   PHX_EXPECT(commitment.total_reward_atoms == snap.total_subsidy_atoms);

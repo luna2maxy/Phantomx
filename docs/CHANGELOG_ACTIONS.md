@@ -15,6 +15,26 @@ Entry format:
 
 ---
 
+## 2026-11-27 — Master plan reward split 90/10, no pool category
+
+- **Time (UTC):** 2026-11-27T13:37:10Z
+- **Action:**
+  - Changed consensus reward constants to PoI 90% / verifier 10%; removed `kPoolShareBps` and `EpochSnapshot::pool_operators`.
+  - `calculate_epoch_rewards()` now emits only `poi` and `verifier` entries; verifier gets `floor(total * 10000 / 100000)`, PoI gets the exact remainder.
+  - Added overflow-safe `mul_div_u64()` / `bps_share()` to the public rewards API and used them in epoch and coinbase/template splits (old `(total * bps) / denom` wrapped above ~9.22e14 atoms).
+  - RPC: `getblockreward` / `getrewardinfo` / `getblocktemplate` now report 90/10 and no pool fields.
+  - Aligned README, TOKENOMICS, ARCHITECTURE, REWARD_DISTRIBUTION, protocol security spec, settlement design, pool protocol, roadmap, release notes, and all `config/*.json` to 90/10 with no pool subsidy.
+  - Added `tests/unit/test_property.cpp` to the unit test target (it was previously never compiled) and added large-total overflow regression tests.
+- **Reason/Request:** User: "rubah plan master tanpa adanya pool rewards, verifier menjadi 10% saja dan poi contributor menjadi 90% sehabis mengimplementasi harus ada bukti test suite dan pengetesan".
+- **Files changed:** `include/phantomx/rewards/rewards.hpp`, `src/rewards/rewards.cpp`, `src/rpc/node_handlers.cpp`, `tests/unit/test_rewards.cpp`, `tests/unit/test_property.cpp`, `tests/CMakeLists.txt`, `config/*.json`, `README.md`, and the docs listed above.
+- **Verification:**
+  - `cmake --build build -j$(nproc)` → success.
+  - `ctest --test-dir build --output-on-failure -j4` → **11/11 passed**.
+  - `./build/tests/phantomx_unit_tests` → **141 passed, 0 failed** (incl. `rewards_distribution_90_10_no_pool`, `rewards_large_epoch_no_u64_overflow`, `property_reward_split_large_totals_no_wrap`).
+  - ASan build: `ASAN_OPTIONS=detect_leaks=1 ctest --test-dir build-asan --output-on-failure -j4` → **11/11 passed**.
+  - Regtest daemon RPC: `getrewardinfo` → `distribution=90/10, contributor_percent=90, verifier_percent=10`; `getblockreward` at height 0 → `poi_atoms=2250000000, verifier_atoms=250000000, subsidy_atoms=2500000000`.
+  - All five `config/*.json` parsed successfully with `poi_contributors_percent=90, verifier_operators_percent=10`.
+
 ## 2026-11-23 — Hide Storage feature in Qt Wallet + Audit Log
 
 - **Time (UTC):** 2026-11-23

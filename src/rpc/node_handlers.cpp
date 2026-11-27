@@ -1843,17 +1843,17 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
     }
 
     const std::uint64_t subsidy = phantomx::rewards::block_subsidy_atoms(next_height);
-    const std::uint64_t verifier_share = (subsidy * phantomx::rewards::kVerifierShareBps) / phantomx::rewards::kBpsDenom;
-    const std::uint64_t pool_share = (subsidy * phantomx::rewards::kPoolShareBps) / phantomx::rewards::kBpsDenom;
-    std::uint64_t contributor_share = subsidy - verifier_share - pool_share;
+    const std::uint64_t verifier_share = phantomx::rewards::bps_share(subsidy, phantomx::rewards::kVerifierShareBps);
+    std::uint64_t contributor_share = subsidy - verifier_share;
     if (g_poi_running.load()) {
       // Deterministic bounded settlement: contributor share scaled by PoI score [0,100].
       // Remainder stays unminted in this block output (conservative; no inflation).
       const double factor = std::clamp(poi_settlement_score / 100.0, 0.0, 1.0);
       contributor_share = static_cast<std::uint64_t>(static_cast<double>(contributor_share) * factor);
     }
-    // Pool operator share defaults to reward address (miner/pool endpoint) until explicit pool operator payout address is configured.
-    const std::uint64_t miner_share = contributor_share + pool_share;
+    // All non-verifier subsidy (PoI contributors, 90%) goes to the mining
+    // reward address. There is no pool reward category in the master plan.
+    const std::uint64_t miner_share = contributor_share;
     json_t* vpick = pick_rolling_verifier(static_cast<std::uint64_t>(next_height));
     const char* vaddr = vpick ? json_string_value(json_object_get(vpick, "address")) : nullptr;
     bool paid_verifier = false;
@@ -2017,10 +2017,9 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
     const std::uint32_t next_h = has_tip ? tip.value()->height + 1 : 0;
     const Hash256Bytes prev = has_tip ? tip.value()->hash : Hash256Bytes{};
     const std::uint64_t subsidy = phantomx::rewards::block_subsidy_atoms(next_h);
-    const std::uint64_t verifier_share = (subsidy * phantomx::rewards::kVerifierShareBps) / phantomx::rewards::kBpsDenom;
-    const std::uint64_t pool_share = (subsidy * phantomx::rewards::kPoolShareBps) / phantomx::rewards::kBpsDenom;
-    const std::uint64_t contributor_share = subsidy - verifier_share - pool_share;
-    const std::uint64_t miner_share = contributor_share + pool_share;
+    const std::uint64_t verifier_share = phantomx::rewards::bps_share(subsidy, phantomx::rewards::kVerifierShareBps);
+    const std::uint64_t contributor_share = subsidy - verifier_share;
+    const std::uint64_t miner_share = contributor_share;
     json_t* obj = json_object();
     json_object_set_new(obj, "algorithm", json_string("poi"));
     json_object_set_new(obj, "height", json_integer(static_cast<json_int_t>(next_h)));
@@ -2029,12 +2028,10 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
     json_object_set_new(obj, "coinbasevalue", json_integer(static_cast<json_int_t>(subsidy)));
     json_object_set_new(obj, "poi_required", json_true());
     json_t* split = json_object();
-    json_object_set_new(split, "contributor_percent", json_integer(70));
-    json_object_set_new(split, "verifier_percent", json_integer(20));
-    json_object_set_new(split, "pool_percent", json_integer(10));
+    json_object_set_new(split, "contributor_percent", json_integer(90));
+    json_object_set_new(split, "verifier_percent", json_integer(10));
     json_object_set_new(split, "miner_subsidy_atoms", json_integer(static_cast<json_int_t>(miner_share)));
     json_object_set_new(split, "verifier_subsidy_atoms", json_integer(static_cast<json_int_t>(verifier_share)));
-    json_object_set_new(split, "pool_subsidy_atoms", json_integer(static_cast<json_int_t>(pool_share)));
     json_t* vpick = pick_rolling_verifier(static_cast<std::uint64_t>(next_h));
     if (vpick) {
       const char* vaddr = json_string_value(json_object_get(vpick, "address"));
@@ -2047,7 +2044,6 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
       json_object_set_new(split, "note", json_string("no verifier registered; full subsidy to miner"));
       json_object_set_new(split, "miner_subsidy_atoms", json_integer(static_cast<json_int_t>(subsidy)));
       json_object_set_new(split, "verifier_subsidy_atoms", json_integer(0));
-      json_object_set_new(split, "pool_subsidy_atoms", json_integer(0));
     }
     json_object_set_new(obj, "coinbase_split", split);
     char* text = json_dumps(obj, JSON_COMPACT);
@@ -2983,13 +2979,12 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
   server.register_method("getblockreward", [](const RpcRequest& req) {
     auto h = req.params.count("height") ? std::stoull(req.params.at("height")) : 0ULL;
     const auto subsidy = phantomx::rewards::block_subsidy_atoms(h);
-    const auto ver = (subsidy * phantomx::rewards::kVerifierShareBps) / phantomx::rewards::kBpsDenom;
-    const auto pool_amt = (subsidy * phantomx::rewards::kPoolShareBps) / phantomx::rewards::kBpsDenom;
-    const auto poi = subsidy - ver - pool_amt;
-    return ok(req.id, {{"height",std::to_string(h)},{"subsidy_atoms",std::to_string(subsidy)},{"poi_atoms",std::to_string(poi)},{"verifier_atoms",std::to_string(ver)},{"pool_atoms",std::to_string(pool_amt)}});
+    const auto ver = phantomx::rewards::bps_share(subsidy, phantomx::rewards::kVerifierShareBps);
+    const auto poi = subsidy - ver;
+    return ok(req.id, {{"height",std::to_string(h)},{"subsidy_atoms",std::to_string(subsidy)},{"poi_atoms",std::to_string(poi)},{"verifier_atoms",std::to_string(ver)}});
   });
   server.register_method("getrewardinfo", [](const RpcRequest& req) {
-    return ok(req.id, {{"distribution","70/20/10"},{"contributor_percent","70"},{"verifier_percent","20"},{"pool_percent","10"},{"status","foundation"}});
+    return ok(req.id, {{"distribution","90/10"},{"contributor_percent","90"},{"verifier_percent","10"},{"status","foundation"}});
   });
   server.register_method("getepochrewards", [](const RpcRequest& req) {
     auto e = req.params.count("epoch") ? req.params.at("epoch") : "0"; return ok(req.id, {{"epoch",e},{"status","foundation"}});

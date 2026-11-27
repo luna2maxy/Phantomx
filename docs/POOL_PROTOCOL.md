@@ -10,9 +10,9 @@ This is a foundation/protocol specification with initial ledger/service implemen
 
 | Role | Description | Reward Source |
 |---|---|---|
-| Pool operator | Runs pool service, registers workers, manages accounting | 10% block subsidy share for valid pool service (policy-defined) |
-| PoI worker | Contributes internet/PoI work | 70% PoI contributor block subsidy share, proportional to validated contribution |
-| Verifier worker | Performs verification tasks | 20% verifier block subsidy share for valid, independent tasks only |
+| Pool operator | Runs pool service, registers workers, manages accounting | No protocol subsidy; optional off-chain fee from the PoI contributor share |
+| PoI worker | Contributes internet/PoI work | 90% PoI contributor block subsidy share, proportional to validated contribution |
+| Verifier worker | Performs verification tasks | 10% verifier block subsidy share for valid, independent tasks only |
 | Storage provider | Stores data for clients | User storage fees/contracts, **not** block reward |
 | Storage client | Purchases/uses storage | Pays storage fees |
 
@@ -68,7 +68,7 @@ All API/WS endpoints must enforce authentication, authorization, rate limiting, 
 
 ## Reward Rules
 
-- Pool earns 10% block subsidy only for valid pool service as defined by consensus/policy.
+- Pool does not receive a protocol block-subsidy share; any pool fee is a separate off-chain agreement paid from the PoI contributor share.
 - Verifier operator earns verifier share only for valid, independent verification tasks.
 - Contributor earns PoI share based on actual validated contribution.
 - Storage provider is paid from storage contracts/fees; no block reward emission for storage.

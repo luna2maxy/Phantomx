@@ -11,6 +11,7 @@ add_executable(phantomx_unit_tests
   unit/test_poi.cpp
   unit/test_consensus.cpp
   unit/test_rewards.cpp
+  unit/test_property.cpp
   unit/test_pool.cpp
   unit/test_rpc.cpp
 )
