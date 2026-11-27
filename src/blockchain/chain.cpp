@@ -5,7 +5,11 @@
 #include <algorithm>
 #include <chrono>
 #include <thread>
+#ifdef _WIN32
+#include <process.h>
+#else
 #include <unistd.h>
+#endif
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
@@ -174,7 +178,11 @@ Result<void> ChainDatabase::put_verifier_challenge_with_quota(const VerifierChal
   static std::atomic<std::uint64_t> g_quota_tx_seq{0};
   static std::atomic<std::uint64_t> g_quota_conn_seq{0};
   const std::uint64_t op_id = ++g_quota_op_seq;
+#ifdef _WIN32
+  const std::uint64_t pid = static_cast<std::uint64_t>(_getpid());
+#else
   const std::uint64_t pid = static_cast<std::uint64_t>(::getpid());
+#endif
   const std::uint64_t tid = static_cast<std::uint64_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
 
   struct ObsSnapshot { QuotaTxDiagObserver cb{}; bool enabled{false}; std::uint64_t conn_id{0}; };

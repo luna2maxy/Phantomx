@@ -7,8 +7,13 @@
 #include <map>
 #include <string>
 #include <system_error>
+#ifndef _WIN32
 #include <unistd.h>
 #include <fcntl.h>
+#else
+#include <io.h>
+#include <fcntl.h>
+#endif
 
 #include "phantomx/common/serialization.hpp"
 #include "phantomx/primitives/hash.hpp"
@@ -819,15 +824,22 @@ Result<void> BftEngine::save_state(const std::string& path) const {
     out.flush();
     if (!out.good()) return MakeError(ErrorCode::kIoError, "failed to write wal");
   }
+#ifndef _WIN32
   int fd = ::open(tmp.c_str(), O_RDONLY);
   if (fd >= 0) { ::fsync(fd); ::close(fd); }
+#else
+  int fd = _open(tmp.c_str(), _O_RDONLY);
+  if (fd >= 0) { _commit(fd); _close(fd); }
+#endif
   std::error_code ec;
   std::filesystem::rename(tmp, path, ec);
   if (ec) return MakeError(ErrorCode::kIoError, "failed to rename wal");
   std::filesystem::path p(path);
   auto dir = p.parent_path().empty() ? std::filesystem::path(".") : p.parent_path();
+#ifndef _WIN32
   int dfd = ::open(dir.c_str(), O_RDONLY);
   if (dfd >= 0) { ::fsync(dfd); ::close(dfd); }
+#endif
   return Result<void>{};
 }
 
