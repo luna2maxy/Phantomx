@@ -1192,7 +1192,7 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
     }
     g_poi_finality_quorum.store(quorum);
   };
-  auto poi_try_finalize = [&](const std::string& block_hash_hex) -> bool {
+  [[maybe_unused]] auto poi_try_finalize = [&](const std::string& block_hash_hex) -> bool {
     std::scoped_lock lk(g_poi_mu);
     auto it = g_poi_block_finality.find(block_hash_hex);
     if (it == g_poi_block_finality.end()) return false;
@@ -1231,7 +1231,7 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
   auto decode_pop_payload_v1 = [](const std::vector<std::uint8_t>& in, phantomx::poi::PopPayloadFieldsV1& f)->bool { return phantomx::poi::decode_pop_payload_v1(in, f); };
 
   static std::mutex g_verifier_challenge_mu;
-  auto verifier_challenge_key = [](const std::string& id){ return std::string("verifier_challenge_") + id; };
+  [[maybe_unused]] auto verifier_challenge_key = [](const std::string& id){ return std::string("verifier_challenge_") + id; };
   auto verifier_challenge_issue = [&, network, pop_network_u8, encode_pop_payload_v1](const std::string& verifier_id, const std::string& owner, const std::string& pubkey_hex) -> RpcResponse {
     if (verifier_id.empty() || verifier_id.size() > 64) return err("", RpcErrorCode::kInvalidParams, "invalid verifier id");
     if (owner.empty() || owner.size() > 128) return err("", RpcErrorCode::kInvalidParams, "invalid owner");
