@@ -1,8 +1,12 @@
 #pragma once
 
+#include <atomic>
+#include <chrono>
+#include <cstdlib>
 #include <functional>
 #include <iostream>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace phantomx::test {
@@ -39,10 +43,52 @@ inline void fail(const std::string& expr, const char* file, int line) {
 }
 
 inline int run_all() {
+  // Optional per-test watchdog. CI sets PHX_TEST_TIMEOUT_MS so a hung test is
+  // reported by name instead of blocking the job forever.
+  unsigned long long timeout_ms = 0;
+  if (const char* env = std::getenv("PHX_TEST_TIMEOUT_MS")) {
+    try { timeout_ms = std::stoull(env); } catch (...) { timeout_ms = 0; }
+  }
+
+  std::atomic<std::size_t> current_index{0};
+  std::atomic<long long> test_started_ms{0};
+  std::atomic<bool> finished{false};
+  std::thread watchdog;
+
+  if (timeout_ms > 0) {
+    watchdog = std::thread([&]() {
+      while (!finished.load(std::memory_order_relaxed)) {
+        const auto start = test_started_ms.load(std::memory_order_relaxed);
+        if (start != 0) {
+          const auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
+              std::chrono::steady_clock::now().time_since_epoch()).count();
+          if (static_cast<unsigned long long>(now - start) >= timeout_ms) {
+            const auto idx = current_index.load(std::memory_order_relaxed);
+            std::cerr << "TIMEOUT: " << registry()[idx].name
+                      << " (" << timeout_ms << " ms)" << std::endl;
+            std::cerr.flush();
+            // Avoid an orderly shutdown that could itself block in a deadlocked
+            // test; report the name and terminate immediately.
+            std::_Exit(3);
+          }
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
+    });
+  }
+
   int passed = 0;
-  for (const auto& t : registry()) {
+  for (std::size_t i = 0; i < registry().size(); ++i) {
+    const auto& t = registry()[i];
+    current_index.store(i, std::memory_order_relaxed);
+    test_started_ms.store(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()).count(),
+        std::memory_order_relaxed);
+
     // Flush each result so a crash still leaves the last executed test visible
-    // in captured CI output.
+    // in captured CI output. Elapsed time also exposes slow tests.
+    const auto t0 = std::chrono::steady_clock::now();
     std::cout << "RUN: " << t.name << std::endl;
     const int before = failures_ref();
     try {
@@ -54,14 +100,20 @@ inline int run_all() {
       std::cerr << "FAIL: " << t.name << " threw unknown exception" << std::endl;
       ++failures_ref();
     }
+    const auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                std::chrono::steady_clock::now() - t0).count();
     if (failures_ref() == before) {
-      std::cout << "PASS: " << t.name << std::endl;
+      std::cout << "PASS: " << t.name << " (" << elapsed_ms << " ms)" << std::endl;
       ++passed;
     } else {
-      std::cout << "FAIL: " << t.name << std::endl;
+      std::cout << "FAIL: " << t.name << " (" << elapsed_ms << " ms)" << std::endl;
     }
   }
-  std::cout << "\n" << passed << " passed, " << failures_ref() << " failed, " << registry().size() << " total" << std::endl;
+  finished.store(true, std::memory_order_relaxed);
+  if (watchdog.joinable()) watchdog.join();
+
+  std::cout << "\n" << passed << " passed, " << failures_ref() << " failed, "
+            << registry().size() << " total" << std::endl;
   return failures_ref() == 0 ? 0 : 1;
 }
 
