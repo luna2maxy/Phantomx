@@ -6,7 +6,7 @@
 This document records every action/change made in the workspace.  
 **Must be updated on every change.**
 
-Entry format:
+Entry format (always write entries in **English** — see `docs/DEVELOPMENT.md`):
 - **Time (UTC)**
 - **Action**
 - **Reason/Request**
@@ -14,6 +14,17 @@ Entry format:
 - **Verification**
 
 ---
+
+## 2026-11-27 — Documentation language rule: English only
+
+- **Time (UTC):** 2026-11-27T13:45:00Z
+- **Action:**
+  - Added a project-wide rule in `docs/DEVELOPMENT.md` requiring all written artifacts (docs, changelog entries, reports, code comments, commit messages) to be in English, including edits to existing files.
+  - Added a short pointer in `README.md` and a language reminder in the `CHANGELOG_ACTIONS.md` entry format.
+  - Translated the quoted request text in the previous changelog entry and the 90/10 reward test report into English.
+- **Reason/Request:** User: "Add to the docs that anything written or updated must be written in English".
+- **Files changed:** `docs/DEVELOPMENT.md`, `docs/CHANGELOG_ACTIONS.md`, `README.md`, `docs/reports/PHANTOMX_REWARD_SPLIT_90_10_TEST_REPORT.md`.
+- **Verification:** Documentation-only change; no code paths or tests affected. Rule text reviewed for consistency across all three locations.
 
 ## 2026-11-27 — Master plan reward split 90/10, no pool category
 
@@ -25,7 +36,7 @@ Entry format:
   - RPC: `getblockreward` / `getrewardinfo` / `getblocktemplate` now report 90/10 and no pool fields.
   - Aligned README, TOKENOMICS, ARCHITECTURE, REWARD_DISTRIBUTION, protocol security spec, settlement design, pool protocol, roadmap, release notes, and all `config/*.json` to 90/10 with no pool subsidy.
   - Added `tests/unit/test_property.cpp` to the unit test target (it was previously never compiled) and added large-total overflow regression tests.
-- **Reason/Request:** User: "rubah plan master tanpa adanya pool rewards, verifier menjadi 10% saja dan poi contributor menjadi 90% sehabis mengimplementasi harus ada bukti test suite dan pengetesan".
+- **Reason/Request:** User: "Change the master plan to remove pool rewards, set verifier to 10% and PoI contributors to 90%, and provide test suite and testing evidence after implementation".
 - **Files changed:** `include/phantomx/rewards/rewards.hpp`, `src/rewards/rewards.cpp`, `src/rpc/node_handlers.cpp`, `tests/unit/test_rewards.cpp`, `tests/unit/test_property.cpp`, `tests/CMakeLists.txt`, `config/*.json`, `README.md`, and the docs listed above.
 - **Verification:**
   - `cmake --build build -j$(nproc)` → success.

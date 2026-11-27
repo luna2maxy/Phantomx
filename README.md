@@ -54,6 +54,8 @@ Active development. The repository contains the core blockchain, UTXO, wallet, P
 
 ## Documentation
 
+All documentation is written in **English**. Keep new and updated docs in English; see `docs/DEVELOPMENT.md` for the project-wide writing rule.
+
 - `docs/ARCHITECTURE.md` — system architecture
 - `docs/CONSENSUS.md` — consensus design
 - `docs/PROOF_OF_INTERNET.md` — PoI model

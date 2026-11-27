@@ -6,7 +6,7 @@
 
 ## Request
 
-> rubah plan master tanpa adanya pool rewards, verifier menjadi 10% saja dan poi contributor menjadi 90% sehabis mengimplementasi harus ada bukti test suite dan pengetesan
+> Change the master plan to remove pool rewards, set verifier to 10% and PoI contributors to 90%, and provide test suite and testing evidence after implementation.
 
 ## What changed
 

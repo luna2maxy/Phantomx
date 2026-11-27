@@ -1,5 +1,18 @@
 # PhantomX Development Guide
 
+## Documentation Language
+
+All written project artifacts MUST be in **English**. This applies to:
+
+- Documentation files under `docs/`, `README.md`, and release notes
+- Changelog entries, test reports, and audit/report documents
+- Source-code comments and commit messages
+
+When updating an existing file, write the new or revised text in English; do not
+introduce text in another language, and translate any affected non-English text
+you touch. User requests may arrive in any language, but the documentation and
+other written artifacts produced for the project must be English.
+
 ## Project Layout
 
 ```text
