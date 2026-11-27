@@ -3001,8 +3001,11 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
 
   // PoI-driven block producer. When PoI is running, produce blocks at an interval
   // modulated by epoch/score (target_block_interval_ms).
+  // Only start when a P2P node is attached: the thread captures references to the
+  // caller's chain/mempool, so it must not outlive them (e.g. in unit tests that
+  // register handlers with a stack-local ChainDatabase).
   bool expected = false;
-  if (g_poi_producer_started.compare_exchange_strong(expected, true)) {
+  if (p2p != nullptr && g_poi_producer_started.compare_exchange_strong(expected, true)) {
     std::thread([&chain, p2p, mine_one, save_poi_attestations, count_online_verifiers, poi_required_quorum]() mutable {
       using namespace std::chrono_literals;
       std::uint64_t last_produced_ms = 0;

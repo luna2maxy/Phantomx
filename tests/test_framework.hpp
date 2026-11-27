@@ -34,31 +34,34 @@ inline int& failures_ref() {
 }
 
 inline void fail(const std::string& expr, const char* file, int line) {
-  std::cerr << "FAIL: " << file << ":" << line << "  " << expr << "\n";
+  std::cerr << "FAIL: " << file << ":" << line << "  " << expr << std::endl;
   ++failures_ref();
 }
 
 inline int run_all() {
   int passed = 0;
   for (const auto& t : registry()) {
+    // Flush each result so a crash still leaves the last executed test visible
+    // in captured CI output.
+    std::cout << "RUN: " << t.name << std::endl;
     const int before = failures_ref();
     try {
       t.fn();
     } catch (const std::exception& e) {
-      std::cerr << "FAIL: " << t.name << " threw exception: " << e.what() << "\n";
+      std::cerr << "FAIL: " << t.name << " threw exception: " << e.what() << std::endl;
       ++failures_ref();
     } catch (...) {
-      std::cerr << "FAIL: " << t.name << " threw unknown exception\n";
+      std::cerr << "FAIL: " << t.name << " threw unknown exception" << std::endl;
       ++failures_ref();
     }
     if (failures_ref() == before) {
-      std::cout << "PASS: " << t.name << "\n";
+      std::cout << "PASS: " << t.name << std::endl;
       ++passed;
     } else {
-      std::cout << "FAIL: " << t.name << "\n";
+      std::cout << "FAIL: " << t.name << std::endl;
     }
   }
-  std::cout << "\n" << passed << " passed, " << failures_ref() << " failed, " << registry().size() << " total\n";
+  std::cout << "\n" << passed << " passed, " << failures_ref() << " failed, " << registry().size() << " total" << std::endl;
   return failures_ref() == 0 ? 0 : 1;
 }
 
