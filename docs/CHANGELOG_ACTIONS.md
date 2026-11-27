@@ -15,6 +15,21 @@ Entry format (always write entries in **English** — see `docs/DEVELOPMENT.md`)
 
 ---
 
+## 2026-11-27 — Show immature balance in Qt wallet Overview
+
+- **Time (UTC):** 2026-11-27T13:48:57Z
+- **Action:**
+  - Updated the existing Overview balance card line so the `Immature: <amount> PHX` value is visible whenever the node is online, or whenever a non-zero immature balance is known from local data.
+  - Kept the current Qt layout, controls, and styling unchanged; no new page or card was added.
+  - Documented the behavior in `docs/DESKTOP_WALLET.md`.
+- **Reason/Request:** User: "It looks like the immature balance has not been added to the Qt wallet; only add it without changing the existing Qt wallet layout."
+- **Files changed:** `apps/phantomx-qt/qml/pages/OverviewPage.qml`, `docs/DESKTOP_WALLET.md`, `docs/CHANGELOG_ACTIONS.md`.
+- **Verification:**
+  - `cmake --build build --target phantomx-qt -j$(nproc)` → success; `OverviewPage.qml` was compiled into the Qt resource and QML cache.
+  - `QT_QPA_PLATFORM=offscreen timeout 5 ./build/bin/phantomx-qt` → no QML/runtime errors in output (exit `124` is the expected timeout for the long-running GUI).
+  - `ctest --test-dir build --output-on-failure -j4` → **11/11 passed**.
+  - `git diff --check` → clean.
+
 ## 2026-11-27 — Documentation language rule: English only
 
 - **Time (UTC):** 2026-11-27T13:45:00Z

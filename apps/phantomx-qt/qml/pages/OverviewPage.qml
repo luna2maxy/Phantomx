@@ -54,7 +54,7 @@ Item {
 
                     Text {
                         Layout.fillWidth: true
-                        visible: walletBridge ? walletBridge.hasImmatureBalance : false
+                        visible: walletBridge ? (walletBridge.online || walletBridge.hasImmatureBalance) : false
                         text: qsTr("Immature: %1").arg(walletBridge ? walletBridge.immatureBalanceDisplay : "—")
                         color: Theme.textMuted
                         font.pixelSize: Theme.fontBody
