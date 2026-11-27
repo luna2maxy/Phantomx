@@ -42,6 +42,7 @@ struct PeerInfo {
   std::chrono::steady_clock::time_point connected_at{};
   std::chrono::steady_clock::time_point last_seen{};
   std::int64_t latency_ms = -1;  // -1 = not measured
+  std::uint32_t observed_height = 0;  // highest tip height learned from headers/blocks
 };
 
 inline constexpr int kBanScore = -100;

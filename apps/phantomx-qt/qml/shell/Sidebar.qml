@@ -12,13 +12,6 @@ Rectangle {
     property var navModel: []
     signal navigate(int index)
 
-    function networkStatusText() {
-        if (!walletBridge) return qsTr("Not Available")
-        if (walletBridge.online) return qsTr("Connected")
-        if (walletBridge.usingLocalData) return qsTr("Offline (Local Data)")
-        return qsTr("Disconnected")
-    }
-
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: Theme.spacing16
@@ -80,74 +73,15 @@ Rectangle {
 
         Item { Layout.fillHeight: true }
 
-        ColumnLayout {
+        Item {
             Layout.fillWidth: true
-            spacing: Theme.spacing8
+            Layout.preferredHeight: syncDashboard.implicitHeight
+            Layout.maximumHeight: Math.max(120, root.height * 0.42)
+            clip: true
 
-            Text { text: qsTr("Network status"); color: Theme.textMuted; font.pixelSize: Theme.fontCaption }
-            Text {
-                Layout.fillWidth: true
-                text: root.networkStatusText()
-                color: Theme.text
-                font.pixelSize: Theme.fontBody
-                font.weight: Theme.weightDemi
-                elide: Text.ElideRight
-            }
-
-            Text { text: qsTr("Wallet sync"); color: Theme.textMuted; font.pixelSize: Theme.fontCaption }
-            Rectangle {
-                Layout.fillWidth: true
-                height: 4
-                radius: 2
-                color: Theme.withAlpha(Theme.text, Theme.opacitySoft)
-                Rectangle {
-                    width: parent.width * (walletBridge ? Math.max(0, Math.min(1, walletBridge.syncProgress)) : 0)
-                    height: parent.height
-                    radius: 2
-                    color: Theme.accent
-                }
-            }
-            Text {
-                Layout.fillWidth: true
-                text: walletBridge ? (walletBridge.syncing ? qsTr("Synchronizing...") : (walletBridge.online || walletBridge.usingLocalData ? qsTr("Synced") : "—")) : "—"
-                color: Theme.textMuted
-                font.pixelSize: Theme.fontCaption
-                elide: Text.ElideRight
-            }
-
-            Text { text: qsTr("Node sync"); color: Theme.textMuted; font.pixelSize: Theme.fontCaption }
-            Rectangle {
-                Layout.fillWidth: true
-                height: 4
-                radius: 2
-                color: Theme.withAlpha(Theme.text, Theme.opacitySoft)
-                Rectangle {
-                    width: {
-                        if (!walletBridge) return 0
-                        var h = walletBridge.chainHeight
-                        var t = walletBridge.headerHeight
-                        if (t > 0) return parent.width * Math.max(0, Math.min(1, h / t))
-                        return (walletBridge.online || walletBridge.usingLocalData) ? parent.width : 0
-                    }
-                    height: parent.height
-                    radius: 2
-                    color: Theme.accent
-                }
-            }
-            Text {
-                Layout.fillWidth: true
-                text: {
-                    if (!walletBridge) return "—"
-                    if (!walletBridge.online && !walletBridge.usingLocalData) return "—"
-                    var h = walletBridge.chainHeight
-                    var t = walletBridge.headerHeight
-                    if (t > 0) return h + " / " + t
-                    if (h > 0) return String(h)
-                    return "—"
-                }
-                color: Theme.textMuted
-                font.pixelSize: Theme.fontCaption
-                elide: Text.ElideRight
+            SyncDashboard {
+                id: syncDashboard
+                anchors.fill: parent
             }
         }
     }

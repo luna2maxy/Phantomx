@@ -44,6 +44,32 @@ int WalletBridge::chainHeight() const { return service_ ? static_cast<int>(servi
 int WalletBridge::headerHeight() const { return service_ ? static_cast<int>(service_->headerHeight()) : 0; }
 int WalletBridge::connectionCount() const { return service_ ? static_cast<int>(service_->connectionCount()) : 0; }
 
+bool WalletBridge::walletSyncAvailable() const { return service_ && service_->walletScanAvailable(); }
+bool WalletBridge::walletSyncing() const { return service_ && service_->nodeOnline() && service_->syncing(); }
+
+double WalletBridge::walletSyncProgress() const {
+  if (!service_ || !service_->walletScanAvailable() || !service_->nodeOnline()) return -1.0;
+  // The wallet queries the node UTXO set at the current tip on demand. It does
+  // not maintain a block-by-block scan cursor, so a successful query is current
+  // with the node; node IBD progress is reported separately.
+  return service_->syncing() ? -1.0 : 1.0;
+}
+
+int WalletBridge::walletScanHeight() const { return service_ ? static_cast<int>(service_->walletScanHeight()) : 0; }
+int WalletBridge::walletScanTargetHeight() const { return service_ ? static_cast<int>(service_->walletScanTargetHeight()) : 0; }
+double WalletBridge::walletBlocksPerSecond() const { return service_ ? service_->walletScanBlocksPerSecond() : -1.0; }
+qint64 WalletBridge::walletEtaSeconds() const { return service_ ? service_->walletScanEtaSeconds() : -1; }
+qint64 WalletBridge::walletLastScanMs() const { return service_ ? service_->lastWalletScanMs() : 0; }
+
+bool WalletBridge::nodeSyncing() const { return service_ && service_->syncing(); }
+double WalletBridge::nodeSyncProgress() const { return service_ && service_->nodeOnline() ? service_->syncProgress() : -1.0; }
+int WalletBridge::nodeHeight() const { return service_ ? static_cast<int>(service_->nodeHeight()) : 0; }
+int WalletBridge::networkHeight() const { return service_ ? static_cast<int>(service_->networkHeight()) : 0; }
+double WalletBridge::nodeBlocksPerSecond() const { return service_ ? service_->nodeBlocksPerSecond() : -1.0; }
+qint64 WalletBridge::nodeEtaSeconds() const { return service_ ? service_->nodeEtaSeconds() : -1; }
+qint64 WalletBridge::nodeLastBlockMs() const { return service_ ? service_->lastNodeBlockMs() : 0; }
+qint64 WalletBridge::nodeLastSyncMs() const { return service_ ? service_->lastSuccessfulSyncMs() : 0; }
+
 bool WalletBridge::hideBalance() const { return hideBalance_; }
 
 void WalletBridge::setHideBalance(bool hide) {

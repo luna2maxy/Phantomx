@@ -458,6 +458,12 @@ void P2PNode::handle_message(PeerPtr peer, const Message& msg) {
       const bool is_bft_block = msg.type == MessageType::kBftBlock;
       auto blk = deserialize_block(msg.payload);
       if (!blk.ok()) { score_peer(peer, kScoreInvalidMessage, true, false, false); return; }
+      {
+        std::scoped_lock lock(mu_);
+        if (blk.value().header.height > peer->info.observed_height) {
+          peer->info.observed_height = blk.value().header.height;
+        }
+      }
       const auto h = block_hash(blk.value().header);
       if (!seen_or_mark(h)) { score_peer(peer, kScoreGoodMessage); return; }
       auto r = chain_->write_block(blk.value());
@@ -774,6 +780,11 @@ void P2PNode::handle_get_headers(PeerPtr peer) {
 
 void P2PNode::handle_headers(PeerPtr peer, const std::vector<Hash256Bytes>& hashes) {
   if (!chain_) return;
+  if (!hashes.empty()) {
+    const auto observed = static_cast<std::uint32_t>(hashes.size() - 1);
+    std::scoped_lock lock(mu_);
+    if (observed > peer->info.observed_height) peer->info.observed_height = observed;
+  }
   std::vector<InventoryItem> want;
   for (const auto& h : hashes) {
     auto bi = chain_->get_block_index(h);
@@ -890,6 +901,16 @@ std::size_t P2PNode::ready_peer_count() const {
   std::size_t n = 0;
   for (auto& [_, p] : peers_) if (p->info.state == PeerState::kReady) ++n;
   return n;
+}
+
+std::uint32_t P2PNode::best_observed_height() const {
+  std::scoped_lock lock(mu_);
+  std::uint32_t best = 0;
+  for (const auto& [_, p] : peers_) {
+    if (p->info.state != PeerState::kReady) continue;
+    best = std::max(best, p->info.observed_height);
+  }
+  return best;
 }
 
 double P2PNode::average_latency_ms() const {

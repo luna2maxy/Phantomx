@@ -46,12 +46,14 @@ void SplashScreen::paintEvent(QPaintEvent*) {
   p.setPen(QPen(QColor("#2a2a2a"), 1));
   p.drawRect(rect().adjusted(0, 0, -1, -1));
 
-  // Logo
+  // Logo: preserve the source aspect ratio and fill the dedicated splash area.
   if (!logo_.isNull()) {
-    const QSize target(360, 140);
+    const int logoWidth = width() - 120;
+    const int logoHeight = qRound(static_cast<double>(logoWidth) * logo_.height() / logo_.width());
+    const QSize target(logoWidth, logoHeight);
     const QPixmap scaled = logo_.scaled(target, Qt::KeepAspectRatio, Qt::SmoothTransformation);
     const int x = (width() - scaled.width()) / 2;
-    const int y = 44;
+    const int y = 14;
     p.drawPixmap(x, y, scaled);
   } else {
     // Fallback mark

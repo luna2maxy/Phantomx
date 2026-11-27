@@ -63,13 +63,20 @@ Rectangle {
             Layout.fillWidth: true
             spacing: Theme.spacing8
 
-            Image {
+            Rectangle {
                 Layout.preferredWidth: 24
                 Layout.preferredHeight: 24
-                source: "qrc:/PhantomXWallet/assets/logo.png"
-                fillMode: Image.PreserveAspectFit
-                smooth: true
-                mipmap: true
+                radius: Theme.radiusSmall
+                color: Theme.withAlpha(Theme.accent, 0.14)
+                border.width: Theme.borderWidth
+                border.color: Theme.withAlpha(Theme.accent, 0.45)
+                Text {
+                    anchors.centerIn: parent
+                    text: "X"
+                    color: Theme.accent
+                    font.pixelSize: 15
+                    font.weight: Theme.weightBold
+                }
             }
             Text {
                 text: "PHANTOMX"

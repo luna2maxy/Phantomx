@@ -571,20 +571,29 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
     r["connections"] = p2p ? std::to_string(p2p->peer_count()) : "0";
     r["peer_count"] = p2p ? std::to_string(p2p->peer_count()) : "0";
     r["ready_peer_count"] = p2p ? std::to_string(p2p->ready_peer_count()) : "0";
+    r["observed_height"] = p2p ? std::to_string(p2p->best_observed_height()) : "0";
     return ok(req.id, r);
   });
   server.register_method("getblockchaininfo", [&chain, p2p, network](const RpcRequest& req) {
     auto tip = chain.tip();
-    const std::uint32_t blocks = tip.ok() && tip.value().has_value() ? tip.value()->height : 0;
-    const std::uint32_t headers = blocks; // no header sync target exposed yet
+    const bool has_tip = tip.ok() && tip.value().has_value();
+    const std::uint32_t blocks = has_tip ? tip.value()->height : 0;
+    const std::uint32_t observed = p2p ? p2p->best_observed_height() : 0;
+    const std::uint32_t headers = std::max(blocks, observed);
     const double progress = headers == 0 ? 1.0 : static_cast<double>(blocks) / static_cast<double>(headers);
+    std::uint64_t blocktime = 0;
+    if (has_tip) {
+      auto idx = chain.get_block_index(tip.value()->hash);
+      if (idx.ok() && idx.value().has_value()) blocktime = idx.value()->timestamp;
+    }
     return ok(req.id, {{"chain", std::string(network_name(network))},
                        {"network", std::string(network_name(network))},
                        {"blocks", std::to_string(blocks)},
                        {"headers", std::to_string(headers)},
+                       {"blocktime", std::to_string(blocktime)},
                        {"verificationprogress", std::to_string(progress > 1.0 ? 1.0 : progress)},
                        {"initialblockdownload", blocks < headers ? "true" : "false"},
-                       {"bestblockhash", tip.ok() && tip.value().has_value() ? to_hex_local(tip.value()->hash) : ""},
+                       {"bestblockhash", has_tip ? to_hex_local(tip.value()->hash) : ""},
                        {"connections", p2p ? std::to_string(p2p->peer_count()) : "0"}});
   });
   server.register_method("getbestblockhash", [&chain](const RpcRequest& req) {
@@ -2193,18 +2202,26 @@ Result<void> register_node_rpc_handlers(RpcServer& server, blockchain::ChainData
   server.register_method("getblockchaininfo", [&chain, p2p, network](const RpcRequest& req) {
     auto tip = chain.tip();
     std::unordered_map<std::string, std::string> r;
-    const std::uint32_t blocks = tip.ok() && tip.value().has_value() ? tip.value()->height : 0;
-    const std::uint32_t headers = blocks;
+    const bool has_tip = tip.ok() && tip.value().has_value();
+    const std::uint32_t blocks = has_tip ? tip.value()->height : 0;
+    const std::uint32_t observed = p2p ? p2p->best_observed_height() : 0;
+    const std::uint32_t headers = std::max(blocks, observed);
     const double progress = headers == 0 ? 1.0 : static_cast<double>(blocks) / static_cast<double>(headers);
+    std::uint64_t blocktime = 0;
+    if (has_tip) {
+      auto idx = chain.get_block_index(tip.value()->hash);
+      if (idx.ok() && idx.value().has_value()) blocktime = idx.value()->timestamp;
+    }
     const auto net_name = std::string(network_name(network));
     r["chain"] = net_name;
     r["network"] = net_name;
     r["chain_height"] = std::to_string(blocks);
     r["blocks"] = std::to_string(blocks);
     r["headers"] = std::to_string(headers);
+    r["blocktime"] = std::to_string(blocktime);
     r["verificationprogress"] = std::to_string(progress > 1.0 ? 1.0 : progress);
     r["initialblockdownload"] = blocks < headers ? "true" : "false";
-    r["bestblockhash"] = tip.ok() && tip.value().has_value() ? to_hex_local(tip.value()->hash) : "";
+    r["bestblockhash"] = has_tip ? to_hex_local(tip.value()->hash) : "";
     r["connections"] = p2p ? std::to_string(p2p->peer_count()) : "0";
     r["max_block_size"] = "1048576";
     r["confirmations"] = "0";

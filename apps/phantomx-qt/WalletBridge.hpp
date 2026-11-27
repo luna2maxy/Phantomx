@@ -17,6 +17,25 @@ class WalletBridge final : public QObject {
   Q_PROPERTY(int chainHeight READ chainHeight NOTIFY stateChanged)
   Q_PROPERTY(int headerHeight READ headerHeight NOTIFY stateChanged)
   Q_PROPERTY(int connectionCount READ connectionCount NOTIFY stateChanged)
+
+  Q_PROPERTY(bool walletSyncAvailable READ walletSyncAvailable NOTIFY stateChanged)
+  Q_PROPERTY(bool walletSyncing READ walletSyncing NOTIFY stateChanged)
+  Q_PROPERTY(double walletSyncProgress READ walletSyncProgress NOTIFY stateChanged)
+  Q_PROPERTY(int walletScanHeight READ walletScanHeight NOTIFY stateChanged)
+  Q_PROPERTY(int walletScanTargetHeight READ walletScanTargetHeight NOTIFY stateChanged)
+  Q_PROPERTY(double walletBlocksPerSecond READ walletBlocksPerSecond NOTIFY stateChanged)
+  Q_PROPERTY(qint64 walletEtaSeconds READ walletEtaSeconds NOTIFY stateChanged)
+  Q_PROPERTY(qint64 walletLastScanMs READ walletLastScanMs NOTIFY stateChanged)
+
+  Q_PROPERTY(bool nodeSyncing READ nodeSyncing NOTIFY stateChanged)
+  Q_PROPERTY(double nodeSyncProgress READ nodeSyncProgress NOTIFY stateChanged)
+  Q_PROPERTY(int nodeHeight READ nodeHeight NOTIFY stateChanged)
+  Q_PROPERTY(int networkHeight READ networkHeight NOTIFY stateChanged)
+  Q_PROPERTY(double nodeBlocksPerSecond READ nodeBlocksPerSecond NOTIFY stateChanged)
+  Q_PROPERTY(qint64 nodeEtaSeconds READ nodeEtaSeconds NOTIFY stateChanged)
+  Q_PROPERTY(qint64 nodeLastBlockMs READ nodeLastBlockMs NOTIFY stateChanged)
+  Q_PROPERTY(qint64 nodeLastSyncMs READ nodeLastSyncMs NOTIFY stateChanged)
+
   Q_PROPERTY(bool hideBalance READ hideBalance WRITE setHideBalance NOTIFY hideBalanceChanged)
   Q_PROPERTY(QString balanceDisplay READ balanceDisplay NOTIFY stateChanged)
   Q_PROPERTY(QString spendableBalanceDisplay READ spendableBalanceDisplay NOTIFY stateChanged)
@@ -58,6 +77,25 @@ class WalletBridge final : public QObject {
   int chainHeight() const;
   int headerHeight() const;
   int connectionCount() const;
+
+  bool walletSyncAvailable() const;
+  bool walletSyncing() const;
+  double walletSyncProgress() const;
+  int walletScanHeight() const;
+  int walletScanTargetHeight() const;
+  double walletBlocksPerSecond() const;
+  qint64 walletEtaSeconds() const;
+  qint64 walletLastScanMs() const;
+
+  bool nodeSyncing() const;
+  double nodeSyncProgress() const;
+  int nodeHeight() const;
+  int networkHeight() const;
+  double nodeBlocksPerSecond() const;
+  qint64 nodeEtaSeconds() const;
+  qint64 nodeLastBlockMs() const;
+  qint64 nodeLastSyncMs() const;
+
   bool hideBalance() const;
   Q_INVOKABLE void setHideBalance(bool hide);
   QString balanceDisplay() const;

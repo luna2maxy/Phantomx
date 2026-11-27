@@ -31,7 +31,7 @@ Binary: `build-ubuntu/bin/phantomx-qt`
 | Send | Implemented (basic) | Presets Fast (2 conf) / Normal (6 conf, default) / Slow (12 conf) with different fees; tx sent via wallet core/node RPC. |
 | Receive | Implemented | Single keystore can generate many addresses. Copy + popup after generation. |
 | Transactions/UTXOs | Implemented (basic) | From `wallet.history()`/UTXO RPC; `Not Available` when offline. |
-| Sync blockheader + ETA | Implemented (best-effort) | Shows blocks/headers, progress bar, ETA minutes from sampled sync rate. If target headers/rate unavailable, ETA is `Not Available`. |
+| Wallet/Node Sync dashboard | Implemented | The sidebar bottom contains two compact expandable sections. Wallet Sync reports the on-demand wallet query status, node tip, last indexed wallet block and last successful query. Node Sync reports local block height, observed peer/network target, remaining blocks, rolling block rate, ETA, connected peers, last block time and last successful status check. No hardcoded heights, percentages or ETAs; unavailable data is shown as `Calculating...`, `Target unavailable` or `—`. |
 | Connected peers (node) | Implemented | From `getconnectioncount` / node RPC. |
 | PoI page | Implemented | Labeled `PoI`. Start/Stop PoI best-effort, bandwidth MB/GB/TB, domain/verifier endpoint, score/epoch/peers/status when available from RPC. |
 | Treasury auto-sweep | Implemented (best-effort) | If enabled, wallet attempts to sweep non-treasury UTXOs to treasury address on next refresh cycle (fee deducted from swept funds). Opt-in. |
@@ -42,7 +42,9 @@ Binary: `build-ubuntu/bin/phantomx-qt`
 
 ## UI layout
 
-- **Overview**: Balance (spendable), Immature Balance (node-reported immature coinbase outputs), Address, Copy Address, block height, connected peers (node), sync blocks/headers, progress, ETA. Compact sync also shown in bottom-left status bar (`Synced` when complete).
+- **Overview**: Balance (spendable), Immature Balance (node-reported immature coinbase outputs), Address, Copy Address, block height, connected peers (node), sync blocks/headers, progress, ETA. Compact sync is also shown in the bottom-left status bar (`Synced` when complete).
+- **Sidebar sync dashboard**: Wallet Sync and Node Sync cards at the bottom of the sidebar. Both are expandable; the collapsed view shows status badge, mini progress bar and percentage. The expanded view shows real heights, remaining blocks, rolling speed, readable ETA and timestamps. Offline state uses a red badge and never fabricates progress or ETA.
+- **Balance card**: Uses a local orange `X` mark instead of `logo.png`; the logo asset is reserved for the splash screen, where it is scaled to the splash area with its aspect ratio preserved.
 - **Send**: send PHX with Fast/Normal/Slow presets (2/6/12 conf targets), different fees.
 - **Receive**: treasury address, Generate New Address, Generate 5 Addresses (one keystore, many addresses).
 - **Transactions**: transaction/UTXO table.

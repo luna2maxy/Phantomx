@@ -15,6 +15,26 @@ Entry format (always write entries in **English** — see `docs/DEVELOPMENT.md`)
 
 ---
 
+## 2026-11-27 — Add real synchronization dashboard to Qt sidebar and reserve logo for splash
+
+- **Time (UTC):** 2026-11-27T14:43:49Z
+- **Action:**
+  - Replaced the simple bottom-sidebar sync labels with `SyncDashboard.qml` and `SyncSection.qml`: two compact, expandable, information-dense Wallet Sync and Node Sync cards with status badges, mini/full progress bars, animated syncing indicator, real heights, remaining blocks, rolling-speed ETA, peer count, last block time and last successful status/query timestamps.
+  - Kept the existing sidebar geometry, navigation, dark palette and orange accent. The dashboard clips and scrolls only when an expanded section exceeds the available sidebar height; collapsed cards fit at the 640px minimum window height.
+  - Added real node target data without changing consensus: P2P peers now record the highest tip height observed from `headers`/block messages, `P2PNode::best_observed_height()` exposes it, and `getblockchaininfo.headers`, `getnetworkinfo.observed_height` and `getblockchaininfo.blocktime` report it. The previous `headers = blocks` placeholder is gone.
+  - Added 60-second rolling-height samples in `WalletService` for node speed/ETA and wallet indexed-height speed/ETA. ETA requires at least a 30-second sample span and positive movement; otherwise the UI shows `Calculating...`. Offline state keeps last known heights/timestamps, hides progress/speed/ETA and shows `Waiting for node connection`.
+  - Kept wallet and node metrics independent. Wallet Sync is modeled as an on-demand node UTXO query: a successful query is current with the node tip, while `Last indexed block` is the real highest wallet-owned UTXO height. No wallet scan cursor is invented.
+  - Removed `logo.png` from the balance card and replaced it with a local orange `X` mark. The splash screen now scales the logo to the dedicated splash area with its aspect ratio preserved, so the image fills the available logo area.
+  - No transaction, keystore, consensus, mining, staking or BFT logic was changed.
+- **Reason/Request:** User asked for a professional, information-dense Blockchain Synchronization Dashboard limited to the Wallet Sync / Node Sync sidebar area, with real calculations and honest offline behavior; also asked not to use `logo.png` in the balance card and to make the splash logo fit the loading screen.
+- **Files changed:** `apps/phantomx-qt/CMakeLists.txt`, `apps/phantomx-qt/SplashScreen.cpp`, `apps/phantomx-qt/WalletBridge.cpp`, `apps/phantomx-qt/WalletBridge.hpp`, `apps/phantomx-qt/WalletService.cpp`, `apps/phantomx-qt/WalletService.hpp`, `apps/phantomx-qt/qml/components/BalanceCard.qml`, `apps/phantomx-qt/qml/components/SyncDashboard.qml`, `apps/phantomx-qt/qml/components/SyncSection.qml`, `apps/phantomx-qt/qml/shell/Sidebar.qml`, `include/phantomx/network/node.hpp`, `include/phantomx/network/peer.hpp`, `src/network/node.cpp`, `src/rpc/node_handlers.cpp`, `docs/DESKTOP_WALLET.md`, `docs/CHANGELOG_ACTIONS.md`.
+- **Verification:**
+  - `cmake --build build -j$(nproc)` → success; both new QML components were added to the Qt module and compiled into `phantomx-qt`.
+  - `qmllint` on `SyncSection.qml`, `SyncDashboard.qml`, `BalanceCard.qml` and `Sidebar.qml` → no syntax/type errors. Standalone singleton/context-property warnings are pre-existing for module-only QML files.
+  - `QT_QPA_PLATFORM=offscreen timeout 5 ./build/bin/phantomx-qt` → no QML/runtime errors (exit `124` is the expected timeout for the long-running GUI).
+  - `ctest --test-dir build --output-on-failure -j4` → **11/11 passed**.
+  - `git diff --check` → clean.
+
 ## 2026-11-27 — Update executed testnet status and finish Qt English UI audit
 
 - **Time (UTC):** 2026-11-27T14:22:47Z

@@ -89,6 +89,7 @@ class P2PNode {
   [[nodiscard]] std::vector<PeerInfo> peers() const;
   [[nodiscard]] std::size_t peer_count() const;
   [[nodiscard]] std::size_t ready_peer_count() const;
+  [[nodiscard]] std::uint32_t best_observed_height() const;  // highest tip learned from ready peers
   [[nodiscard]] double average_latency_ms() const;  // -1 if no peers measured
   [[nodiscard]] std::uint64_t relay_message_count() const;
   [[nodiscard]] bool is_banned(const std::string& host, std::uint16_t port) const;

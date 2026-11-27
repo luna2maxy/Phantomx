@@ -42,6 +42,24 @@ QString defaultNodeRpcForNetwork(phantomx::Network n) {
   return QString("http://127.0.0.1:%1").arg(phantomx::default_rpc_port(n));
 }
 
+using HeightSample = std::pair<qint64, std::uint32_t>;
+
+void pruneSamples(std::deque<HeightSample>& samples, qint64 now, qint64 windowMs, std::size_t maxSamples) {
+  while (samples.size() > maxSamples) samples.pop_front();
+  while (!samples.empty() && (now - samples.front().first) > windowMs) samples.pop_front();
+}
+
+double rollingBlocksPerSecond(const std::deque<HeightSample>& samples, qint64 minSpanMs) {
+  if (samples.size() < 2) return -1.0;
+  const auto& first = samples.front();
+  const auto& last = samples.back();
+  const qint64 dt = last.first - first.first;
+  if (dt < minSpanMs) return -1.0;
+  const qint64 dh = last.second >= first.second ? static_cast<qint64>(last.second - first.second) : 0;
+  if (dh <= 0) return -1.0;
+  return static_cast<double>(dh) * 1000.0 / static_cast<double>(dt);
+}
+
 }  // namespace
 
 quint64 MiningSettings::bandwidthBytes() const { return bandwidthValue * unitMultiplier(bandwidthUnit); }
@@ -170,6 +188,14 @@ void WalletService::setNetwork(const QString& network) {
   config_path_ = QString::fromStdString(phantomx::default_config_path(phantomx::default_datadir(*n)).string());
   node_rpc_ = defaultNodeRpcForNetwork(*n);
   sync_samples_.clear();
+  wallet_scan_samples_.clear();
+  wallet_scan_available_ = false;
+  wallet_scan_syncing_ = false;
+  wallet_scan_blocks_per_second_ = -1.0;
+  wallet_scan_eta_seconds_ = -1;
+  node_blocks_per_second_ = -1.0;
+  node_eta_seconds_ = -1;
+
   {
     QSettings s(QString::fromStdString((std::filesystem::path(datadir_.toStdString()) / "qt-wallet.ini").string()), QSettings::IniFormat);
     s.setValue("network/name", network_);
@@ -199,6 +225,14 @@ void WalletService::setDatadir(const QString& datadir) {
   datadir_ = datadir.trimmed();
   config_path_ = QString::fromStdString((std::filesystem::path(datadir_.toStdString()) / "phantomx.conf").string());
   sync_samples_.clear();
+  wallet_scan_samples_.clear();
+  wallet_scan_available_ = false;
+  wallet_scan_syncing_ = false;
+  wallet_scan_blocks_per_second_ = -1.0;
+  wallet_scan_eta_seconds_ = -1;
+  node_blocks_per_second_ = -1.0;
+  node_eta_seconds_ = -1;
+
   loadConfig();
   rebuildWallet();
   (void)ensureWallet();
@@ -357,34 +391,70 @@ phantomx::Result<phantomx::rpc::RpcResponse> WalletService::nodeCall(const std::
 
 void WalletService::updateSyncEstimate() {
   const qint64 now = QDateTime::currentMSecsSinceEpoch();
-  sync_samples_.push_back({now, chain_height_});
-  while (sync_samples_.size() > 30) sync_samples_.pop_front();
-  while (!sync_samples_.empty() && (now - sync_samples_.front().first) > 5 * 60 * 1000) sync_samples_.pop_front();
+  node_height_ = chain_height_;
+  network_height_ = header_height_;
 
-  if (header_height_ <= chain_height_) {
+  const std::uint32_t previousHeight = sync_samples_.empty() ? chain_height_ : sync_samples_.back().second;
+  if (last_node_block_ms_ == 0 || chain_height_ > previousHeight) last_node_block_ms_ = now;
+  if (node_online_) last_successful_sync_ms_ = now;
+
+  sync_samples_.push_back({now, chain_height_});
+  pruneSamples(sync_samples_, now, 60 * 1000, 60);
+  const double rate = rollingBlocksPerSecond(sync_samples_, 30 * 1000);
+
+  if (network_height_ <= node_height_) {
     syncing_ = false;
     sync_progress_ = node_online_ ? 1.0 : 0.0;
     eta_minutes_ = node_online_ ? 0 : -1;
+    node_blocks_per_second_ = rate;
+    node_eta_seconds_ = -1;
     return;
   }
 
   syncing_ = true;
-  sync_progress_ = header_height_ == 0 ? 0.0 : static_cast<double>(chain_height_) / static_cast<double>(header_height_);
+  sync_progress_ = static_cast<double>(node_height_) / static_cast<double>(network_height_);
   if (sync_progress_ > 1.0) sync_progress_ = 1.0;
-  eta_minutes_ = -1;
-  if (sync_samples_.size() >= 2) {
-    const auto& first = sync_samples_.front();
-    const auto& last = sync_samples_.back();
-    const qint64 dtMs = last.first - first.first;
-    const uint32_t dh = last.second >= first.second ? (last.second - first.second) : 0;
-    if (dtMs >= 20000 && dh > 0) {
-      const double blocksPerMin = (static_cast<double>(dh) * 60000.0) / static_cast<double>(dtMs);
-      if (blocksPerMin > 0.0001) {
-        const double remaining = static_cast<double>(header_height_ - chain_height_);
-        eta_minutes_ = static_cast<int>((remaining / blocksPerMin) + 0.5);
-      }
-    }
+  node_blocks_per_second_ = rate;
+  const std::uint64_t remaining = network_height_ - node_height_;
+  node_eta_seconds_ = rate > 0.0 ? static_cast<qint64>(static_cast<double>(remaining) / rate) : -1;
+  eta_minutes_ = node_eta_seconds_ >= 0 ? static_cast<int>((node_eta_seconds_ + 30000) / 60000) : -1;
+}
+
+void WalletService::updateWalletScanEstimate() {
+  const qint64 now = QDateTime::currentMSecsSinceEpoch();
+  wallet_scan_target_height_ = chain_height_;
+  if (!node_online_ || !hasWallet()) {
+    wallet_scan_available_ = false;
+    wallet_scan_syncing_ = false;
+    wallet_scan_blocks_per_second_ = -1.0;
+    wallet_scan_eta_seconds_ = -1;
+    return;
   }
+
+  auto history = wallet_.history();
+  if (!history.ok()) {
+    wallet_scan_available_ = false;
+    wallet_scan_syncing_ = false;
+    wallet_scan_blocks_per_second_ = -1.0;
+    wallet_scan_eta_seconds_ = -1;
+    return;
+  }
+
+  std::uint32_t indexedHeight = 0;
+  for (const auto& tx : history.value()) indexedHeight = std::max(indexedHeight, tx.height);
+  wallet_scan_height_ = indexedHeight;
+  wallet_scan_available_ = true;
+  last_wallet_scan_ms_ = now;
+
+  wallet_scan_samples_.push_back({now, wallet_scan_height_});
+  pruneSamples(wallet_scan_samples_, now, 60 * 1000, 60);
+  wallet_scan_blocks_per_second_ = rollingBlocksPerSecond(wallet_scan_samples_, 30 * 1000);
+
+  wallet_scan_syncing_ = wallet_scan_target_height_ > wallet_scan_height_;
+  const std::uint64_t remaining = wallet_scan_syncing_ ? wallet_scan_target_height_ - wallet_scan_height_ : 0;
+  wallet_scan_eta_seconds_ = wallet_scan_blocks_per_second_ > 0.0
+      ? static_cast<qint64>(static_cast<double>(remaining) / wallet_scan_blocks_per_second_)
+      : -1;
 }
 
 void WalletService::loadLocalChainFallback() {
@@ -487,6 +557,12 @@ void WalletService::loadLocalChainFallback() {
 
   chain_height_ = std::max(chain_height_, localHeight);
   header_height_ = std::max(header_height_, chain_height_);
+  node_height_ = chain_height_;
+  network_height_ = 0;  // No peer target is available while offline.
+  node_blocks_per_second_ = -1.0;
+  node_eta_seconds_ = -1;
+  wallet_scan_blocks_per_second_ = -1.0;
+  wallet_scan_eta_seconds_ = -1;
   balance_atoms_ = bal;
   spendable_balance_atoms_ = bal;
   immature_balance_atoms_ = 0; // local fallback cannot reliably determine maturity
@@ -535,14 +611,19 @@ QVariantMap WalletService::refreshNodeStatus() {
   if (!h.ok()) rpc_error_ = errText(h.error());
 
   header_height_ = chain_height_;
-  // Best-effort blockchain info for headers/progress.
+  // Best-effort blockchain info for the observed network target and tip time.
   auto bc = nodeCall("getblockchaininfo", {});
   if (bc.ok()) {
     const auto& r = bc.value().result;
-    if (auto it = r.find("headers"); it != r.end()) header_height_ = static_cast<uint32_t>(std::stoul(it->second));
-    if (auto it = r.find("blocks"); it != r.end()) chain_height_ = std::max(chain_height_, static_cast<uint32_t>(std::stoul(it->second)));
-    if (auto it = r.find("verificationprogress"); it != r.end()) {
-      try { sync_progress_ = std::stod(it->second); } catch (...) {}
+    try {
+      if (auto it = r.find("headers"); it != r.end()) header_height_ = static_cast<uint32_t>(std::stoul(it->second));
+      if (auto it = r.find("blocks"); it != r.end()) chain_height_ = std::max(chain_height_, static_cast<uint32_t>(std::stoul(it->second)));
+      if (auto it = r.find("blocktime"); it != r.end()) {
+        const auto seconds = std::stoull(it->second);
+        if (seconds > 0) last_node_block_ms_ = static_cast<qint64>(seconds) * 1000;
+      }
+    } catch (...) {
+      // Keep the last known values when a node returns malformed sync data.
     }
   }
   if (header_height_ < chain_height_) header_height_ = chain_height_;
@@ -551,6 +632,7 @@ QVariantMap WalletService::refreshNodeStatus() {
     loadLocalChainFallback();
   } else {
     updateSyncEstimate();
+    updateWalletScanEstimate();
   }
 
   out["online"] = node_online_;
@@ -563,6 +645,18 @@ QVariantMap WalletService::refreshNodeStatus() {
   out["syncing"] = syncing_;
   out["sync_progress"] = sync_progress_;
   out["eta_minutes"] = eta_minutes_;
+  out["node_height"] = node_height_;
+  out["network_height"] = network_height_;
+  out["node_blocks_per_second"] = node_blocks_per_second_;
+  out["node_eta_seconds"] = node_eta_seconds_;
+  out["last_node_block_ms"] = last_node_block_ms_;
+  out["last_successful_sync_ms"] = last_successful_sync_ms_;
+  out["wallet_scan_height"] = wallet_scan_height_;
+  out["wallet_scan_target_height"] = wallet_scan_target_height_;
+  out["wallet_blocks_per_second"] = wallet_scan_blocks_per_second_;
+  out["wallet_eta_seconds"] = wallet_scan_eta_seconds_;
+  out["last_wallet_scan_ms"] = last_wallet_scan_ms_;
+  out["wallet_scan_available"] = wallet_scan_available_;
   out["error"] = rpc_error_;
   if (node_online_) maybeAutoSweep();
   emit rpcStatusChanged();

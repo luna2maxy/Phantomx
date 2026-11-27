@@ -56,6 +56,8 @@ qt_add_qml_module(phantomx-qt
     qml/components/ListRow.qml
     qml/components/IconButton.qml
     qml/components/BalanceCard.qml
+    qml/components/SyncSection.qml
+    qml/components/SyncDashboard.qml
     qml/pages/PoiPage.qml
     qml/pages/OverviewPage.qml
     qml/pages/SendPage.qml

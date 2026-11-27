@@ -46,6 +46,19 @@ class WalletService final : public QObject {
   [[nodiscard]] double syncProgress() const { return sync_progress_; }
   [[nodiscard]] int etaMinutes() const { return eta_minutes_; }
   [[nodiscard]] bool syncing() const { return syncing_; }
+  [[nodiscard]] uint32_t nodeHeight() const { return node_height_; }
+  [[nodiscard]] uint32_t networkHeight() const { return network_height_; }
+  [[nodiscard]] double nodeBlocksPerSecond() const { return node_blocks_per_second_; }
+  [[nodiscard]] qint64 nodeEtaSeconds() const { return node_eta_seconds_; }
+  [[nodiscard]] qint64 lastNodeBlockMs() const { return last_node_block_ms_; }
+  [[nodiscard]] qint64 lastSuccessfulSyncMs() const { return last_successful_sync_ms_; }
+  [[nodiscard]] uint32_t walletScanHeight() const { return wallet_scan_height_; }
+  [[nodiscard]] uint32_t walletScanTargetHeight() const { return wallet_scan_target_height_; }
+  [[nodiscard]] double walletScanBlocksPerSecond() const { return wallet_scan_blocks_per_second_; }
+  [[nodiscard]] qint64 walletScanEtaSeconds() const { return wallet_scan_eta_seconds_; }
+  [[nodiscard]] qint64 lastWalletScanMs() const { return last_wallet_scan_ms_; }
+  [[nodiscard]] bool walletScanAvailable() const { return wallet_scan_available_; }
+  [[nodiscard]] bool walletScanSyncing() const { return wallet_scan_syncing_; }
   [[nodiscard]] bool autoCreatedWallet() const { return auto_created_wallet_; }
   [[nodiscard]] bool poiRunning() const { return poi_running_; }
   [[nodiscard]] bool usingLocalData() const { return using_local_data_; }
@@ -94,6 +107,7 @@ class WalletService final : public QObject {
   void applyNetworkDefaults();
   void rebuildWallet();
   void updateSyncEstimate();
+  void updateWalletScanEstimate();
   void maybeAutoSweep();
   [[nodiscard]] phantomx::Result<phantomx::rpc::RpcResponse> nodeCall(
       const std::string& method,
@@ -126,6 +140,20 @@ class WalletService final : public QObject {
   QString treasury_address_;
   qint64 last_sweep_ms_ = 0;
   std::deque<std::pair<qint64, uint32_t>> sync_samples_;
+  uint32_t node_height_ = 0;
+  uint32_t network_height_ = 0;
+  double node_blocks_per_second_ = -1.0;
+  qint64 node_eta_seconds_ = -1;
+  qint64 last_node_block_ms_ = 0;
+  qint64 last_successful_sync_ms_ = 0;
+  uint32_t wallet_scan_height_ = 0;
+  uint32_t wallet_scan_target_height_ = 0;
+  double wallet_scan_blocks_per_second_ = -1.0;
+  qint64 wallet_scan_eta_seconds_ = -1;
+  qint64 last_wallet_scan_ms_ = 0;
+  bool wallet_scan_available_ = false;
+  bool wallet_scan_syncing_ = false;
+  std::deque<std::pair<qint64, uint32_t>> wallet_scan_samples_;
   QVariantList local_tx_history_;
   MiningSettings mining_;
 };
